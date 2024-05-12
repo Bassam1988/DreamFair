@@ -1,10 +1,10 @@
 from sqlalchemy.orm import joinedload
-import jwt
-
-from ..models.models import Project
-from ..schemas.schemas import ProjectSchema
-from ..database import db_session
 from flask import current_app
+
+from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, VideoDuration
+from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, VideoDurationSchema
+from ..database import db_session
+
 
 import json
 import requests
@@ -27,16 +27,14 @@ def token_required_bl(token):
 
 def get_all_projects(user_id):
     project_schema = ProjectSchema()
-    projects = Project.query.filter_by(user_id=user_id).options(
-        joinedload(Project.script_style)).all()
+    projects = Project.query.filter_by(user_id=user_id).all()
     data = project_schema.dump(projects, many=True)
     return {'data': data, 'status': 200}
 
 
 def get_project_by_id(user_id, project_id):
     project_schema = ProjectSchema()
-    project = Project.query.options(
-        joinedload(Project.script_style)).get(project_id)
+    project = Project.query.get(project_id)
     if project and str(project.user_id) == user_id:
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
@@ -63,3 +61,49 @@ def create_project_bl(data, user_id):
     db_session.add(project)
     db_session.commit()
     return {'data': {'project': project_schema.dump(project)}, 'safe': False, 'status': 201}
+
+
+def get_all_script_styles():
+    script_style_schema = ScriptStyleSchema()
+    script_styles = ScriptStyle.query.all()
+    data = script_style_schema.dump(script_styles, many=True)
+    return {'data': data, 'status': 200}
+
+
+def get_all_storyboard_styles():
+    storyboard_style_schema = StoryBoardStyleSchema()
+    storyboard_styles = StoryBoardStyle.query.all()
+    data = storyboard_style_schema.dump(storyboard_styles, many=True)
+    return {'data': data, 'status': 200}
+
+
+def get_all_video_durations():
+    video_duration_schema = VideoDurationSchema()
+    video_durations = VideoDuration.query.all()
+    data = video_duration_schema.dump(video_durations, many=True)
+    return {'data': data, 'status': 200}
+
+
+def get_all_aspect_ratios():
+    aspect_ratio_schema = AspectRatioSchema()
+    aspect_ratios = AspectRatio.query.all()
+    data = aspect_ratio_schema.dump(aspect_ratios, many=True)
+    return {'data': data, 'status': 200}
+
+
+def get_all_boards_per_mins():
+    boards_per_min_schema = BoardsPerMinSchema()
+    boards_per_mins = BoardsPerMin.query.all()
+    data = boards_per_min_schema.dump(boards_per_mins, many=True)
+    return {'data': data, 'status': 200}
+
+
+def get_project_storyboard_bl(user_id, project_id):
+    project_storyboard_schema = StoryboardSchema()
+    project_storyboards = db_session.query(Storyboard).join(Project).\
+        filter(Storyboard.project_id == project_id, Project.user_id == user_id).\
+        options(joinedload(Storyboard.project)).all()
+    if project_storyboards:
+        data = project_storyboard_schema.dump(project_storyboards, many=True)
+        return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}

@@ -65,10 +65,15 @@ class ProjectSchema(Schema):
         StoryboardProjectSchema, many=True, dump_only=True)  # type: ignore
 
 
+class StoryboardProjectSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    name = fields.Str(required=True)
+
+
 class StoryboardSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
     image = fields.Str()
     scene_description = fields.Str()
     project_id = fields.UUID(load_only=True)
-    project = fields.Nested(ProjectSchema, dump_only=True)
+    project = fields.Nested(StoryboardProjectSchema, dump_only=True)
