@@ -6,8 +6,8 @@ RUN apt-get update \
     && pip install --no-cache-dir --upgrade pip
 
 WORKDIR /app
-COPY ./auth_requirements.txt /app
-RUN pip install --no-cache-dir --requirement /app/auth_requirements.txt
+COPY ./requirements.txt /app
+RUN pip install --no-cache-dir --requirement /app/requirements.txt
 COPY . /app
 
 EXPOSE 5000

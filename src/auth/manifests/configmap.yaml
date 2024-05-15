@@ -3,7 +3,9 @@ kind: ConfigMap
 metadata: 
   name: auth-configmap
 data:
-  MYSQL_HOST: host.minikube.internal
-  MYSQL_USER: auth_user
-  MYSQL_DB: auth
+  P_DB_HOST: host.minikube.internal
+  P_DB_TYPE: postgresql+psycopg2
+  P_DB_USER: deamFear
+  P_DATABASE_NAME: DFAccount
   MYSQL_PORT: "3306"
+  PG_PORT: "5432"

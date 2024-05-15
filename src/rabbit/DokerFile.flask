@@ -1,0 +1,15 @@
+# Use the official RabbitMQ image with management plugin
+FROM rabbitmq:3-management
+
+# Set environment variables (optional)
+ENV RABBITMQ_DEFAULT_USER=myuser
+ENV RABBITMQ_DEFAULT_PASS=mypassword
+
+# Additional custom configuration commands can go here
+# For example, enabling other plugins
+# RUN rabbitmq-plugins enable some-plugin
+
+# Expose the ports (5672 for server, 15672 for management UI)
+EXPOSE 5672 15672
+
+# The ENTRYPOINT from the base image is used, so RabbitMQ starts up automatically
