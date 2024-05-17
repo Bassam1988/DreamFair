@@ -1,6 +1,6 @@
 from ..bl.storyboard_bl import create_project_bl, get_all_aspect_ratios, get_all_boards_per_mins, \
-    get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations,\
-          get_project_by_id, get_project_storyboard_bl
+    get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, \
+    get_project_by_id, get_project_storyboard_bl
 from ..bl.auth_svc.validate import token_required_bl
 from ..helper.custom_response import CustomResponse
 
@@ -10,7 +10,7 @@ from flask import Blueprint, request
 from functools import wraps
 
 
-storyboard_blueprint = Blueprint('auth', __name__)
+storyboard_blueprint = Blueprint('text2text', __name__)
 
 
 def token_required(f):

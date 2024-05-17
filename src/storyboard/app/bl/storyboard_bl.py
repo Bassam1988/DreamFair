@@ -5,7 +5,6 @@ from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSche
 from ..database import db_session
 
 
-
 def get_all_projects(user_id):
     project_schema = ProjectSchema()
     projects = Project.query.filter_by(user_id=user_id).all()
