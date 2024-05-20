@@ -19,3 +19,4 @@ platformdirs
 toml
 werkzeug
 wrapt
+alembic==1.13.1

@@ -11,96 +11,55 @@ from ..schemas.schemas import StoryboardSchema, Text2TextOperationSchema
 from ..database import db_session
 
 
-def create_operation_storyboard(dict_data, response_data_message, reference, prompt):
-    text2text_operation_schema = Text2TextOperationSchema()
-    text2text_operation_data = {
-        'reference': reference,
-        'original_text': prompt,
-        'generated_text': response_data_message}
-
-    generated_script = ""
-    if dict_data:
-        generated_script = dict_data['script']
-    text2text_operation_data['generated_script'] = generated_script
-    errors = text2text_operation_schema.validate(text2text_operation_data)
-    if errors:
-        raise Exception(errors)
-    text2text_operation = Text2TextOperation(**text2text_operation_data)
-    storyboards_list = []
-    db_session.add(text2text_operation)
-    db_session.flush()
-    if dict_data:
-        text2text_operation_id = text2text_operation.id
-        storyboards = dict_data['storyboards']
-        for key, value in storyboards.items():
-            storyboard_data = {
-                'text2text_operation_id': text2text_operation_id,
-                'order': key,
-                'generated_text': value
-            }
-            storyboard_schema = StoryboardSchema()
-            errors = storyboard_schema.validate(storyboard_data)
-            if errors:
-                raise Exception(errors)
-            storyboard = Text2TextOperationStoryboard(**storyboard_data)
-            storyboards_list.append(storyboard)
-
-    if storyboards_list:
-        db_session.bulk_save_objects(storyboards_list)
-    db_session.commit()
-
-
-def generate_script(data):
-    """Generates a script using OpenAI based on user inputs.
+def generate_storyboards(data):
+    """Generates storyboards using DALL·E based on the script and user preferences.
 
     Args:
-        synopsis (str): User-provided synopsis for the script.
-        script_style (str): The desired style of the script.
-        video_duration (str): The desired duration of the video.
+        script (str): The generated script to base the storyboards on.
+        storyboard_style (str): The style of the storyboard.
+        detailed (bool): Whether the storyboard should be detailed.
+        colored (bool): Whether the storyboard should be colored.
 
     Returns:
-        str: The generated script or an error message.
+        list: URLs of the generated storyboard images or error message placeholders.
     """
-    synopsis = data['synopsis']
-    script_style = data['script_style']
-    video_duration = data['video_duration']
-    reference = data.get('reference', None)
+    # storyboards stylse, size, and other data
+    orginal_script = data['script']
+    # prompts = data['prompts']
+    prompts = data['prompts']
+    detail_description = data['detail_description']
+    color_description = data['color_description']
+    storyboard_style = 'Sketch/Doodly'
+
     openai_key = current_app.config.get('OPENAI_KEY')
     client = OpenAI(api_key=openai_key)
-    prompt = f"Generate a script in the style of {script_style} for a video lasting {video_duration},\
-          inspired by the following synopsis: {synopsis}.\
-              After generating the script write the storyboards as image or "\
-                "storyboard descriptions as dictionary with the following annotation: "\
-        "Image Number: generated storyboard description. "\
-        "add the hole result as dictionary, like this:"\
-        "{'script': 'the generated script', 'storyboards':{'1':'generated storyboard 1','2':'generated storyboard 2', ...}} "\
-        " and without any additional characters "\
-        "don't add \n at the end of result, the result should begine and end like this {} "\
-        "don't add \n out side the generated text, the result should be exactly like this"\
-        "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"generated storyboard 1\",\"2\":\"generated storyboard 2\", ...}}' "
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a senior scripts writer and artist."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        response_data_message = str(
-            response.choices[0].message.content)
-        dict_data = None
+
+    images_urls = []
+    # prompt = f"I will give you the totla script, and the prompt of each image inside that script,"\
+    #     "and you will generate an image for each prompt, and return list of images urls in the same order of the images prompts.\n"\
+    #     f" all images should be {color_description}, and {detail_description}, and in the style of {storyboard_style}.\n"\
+    #     f"the total script: {orginal_script} \n"\
+    #     "the prompts are dictionary in this shape {\"image_order\":\"image_description\"}: "\
+    #     f"{prompts}\n"\
+    #     "return me list of urls in the same images' order"
+
+    for key, value in prompts.items():
+        prompt = f"I will give you the totla script, and the prompt of the image inside that script,"\
+            f"the total script: {orginal_script} \n"\
+            f" Create a {color_description}, {detail_description} storyboard in the style of {storyboard_style} based on this storyboard description:{value}.\n"\
+
         try:
-            dict_data = ast.literal_eval(response_data_message)
-        except:
-            try:
-                dict_data = json.loads(response_data_message)
-            except Exception as e:
-                raise e
+            response = client.images.generate(
+                model="dall-e-3",
+                size="1024x1024",
+                quality="standard",
+                prompt=prompt
 
-        create_operation_storyboard(
-            dict_data, response_data_message, reference, prompt)
-        response_data = {'data': dict_data}
+            )
 
-        return response_data
-    except Exception as e:
-        return "Failed to generate script."
+            images_urls.append(response.data[0].url)
+
+        except Exception as e:
+            images_urls.append("img.png")
+
+    return {'data': images_urls, }

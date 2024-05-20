@@ -1,5 +1,5 @@
 
-from ..bl.text2image_bl import generate_script
+from ..bl.text2image_bl import generate_storyboards
 from ..bl.auth_svc.validate import token_required_bl
 from ..helper.custom_response import CustomResponse
 
@@ -9,7 +9,7 @@ from flask import Blueprint, request
 from functools import wraps
 
 
-text2texxt_blueprint = Blueprint('text2text', __name__)
+text2image_blueprint = Blueprint('text2text', __name__)
 
 
 def token_required(f):
@@ -31,13 +31,13 @@ def token_required(f):
     return decorated
 
 
-@text2texxt_blueprint.route('/create_script', methods=['POST'])
+@text2image_blueprint.route('/create_storyboards', methods=['POST'])
 @token_required
-def create_script(current_user):
+def create_storyboards(current_user):
     if request.is_json:
         data = request.get_json()
     else:
         data = request.form
-    result = generate_script(data)
+    result = generate_storyboards(data)
     data = result['data']
     return CustomResponse(succeeded=True, data=data, status=200)

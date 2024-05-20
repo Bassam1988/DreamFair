@@ -20,3 +20,4 @@ toml
 werkzeug
 wrapt
 requests
+alembic==1.13.1

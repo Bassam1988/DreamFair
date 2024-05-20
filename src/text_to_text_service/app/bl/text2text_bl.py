@@ -80,7 +80,7 @@ def generate_script(data):
         "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"generated storyboard 1\",\"2\":\"generated storyboard 2\", ...}}' "
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a senior scripts writer and artist."},
                 {"role": "user", "content": prompt}

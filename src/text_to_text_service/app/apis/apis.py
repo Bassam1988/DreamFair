@@ -9,7 +9,7 @@ from flask import Blueprint, request
 from functools import wraps
 
 
-text2texxt_blueprint = Blueprint('text2text', __name__)
+text2text_blueprint = Blueprint('text2text', __name__)
 
 
 def token_required(f):
@@ -31,7 +31,7 @@ def token_required(f):
     return decorated
 
 
-@text2texxt_blueprint.route('/create_script', methods=['POST'])
+@text2text_blueprint.route('/create_script', methods=['POST'])
 @token_required
 def create_script(current_user):
     if request.is_json:

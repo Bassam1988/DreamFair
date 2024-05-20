@@ -39,7 +39,7 @@ def create_app():
         return response
 
     with app.app_context():
-        from .apis.apis import text2texxt_blueprint
-        app.register_blueprint(text2texxt_blueprint, url_prefix='/text2text')
+        from .apis.apis import text2text_blueprint
+        app.register_blueprint(text2text_blueprint, url_prefix='/text2text')
 
         return app

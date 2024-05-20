@@ -22,3 +22,5 @@ wrapt
 requests
 openai
 environ
+django-environ==0.11.2
+alembic==1.13.1
