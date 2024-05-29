@@ -7,24 +7,23 @@ import uuid
 from datetime import datetime, timezone
 
 
-class Text2TextOperation(Base):
-    __tablename__ = 'text2text_operation'
+class Text2ImageOperation(Base):
+    __tablename__ = 'text2image_operation'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     reference = Column(String(50))
-    original_text = Column(String(10000))
-    generated_text = Column(String(10000))
-    generated_script = Column(String(10000))
+    script_text = Column(String(10000))
     created_date = Column(DateTime, default=datetime.now(timezone.utc))
-    storyboards = relationship(
-        "Text2TextOperationStoryboard", back_populates="text2text_operation")
+    images = relationship(
+        "Text2ImageOperationImage", back_populates="text2image_operation")
 
 
-class Text2TextOperationStoryboard(Base):
-    __tablename__ = 'text2text_operation_storyboard'
+class Text2ImageOperationImage(Base):
+    __tablename__ = 'text2image_operation_image'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    text2text_operation_id = Column(UUID, ForeignKey(
-        'text2text_operation.id'), nullable=False)
-    text2text_operation = relationship(
-        "Text2TextOperation", back_populates="storyboards")
-    generated_text = Column(String(10000))
+    text2image_operation_id = Column(UUID, ForeignKey(
+        'text2image_operation.id'), nullable=False)
+    text2image_operation = relationship(
+        "Text2ImageOperation", back_populates="images")
+    scene_text = Column(String(10000))
     order = Column(Integer)
+    url = Column(String(250))

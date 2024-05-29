@@ -24,3 +24,5 @@ openai
 environ
 django-environ==0.11.2
 alembic==1.13.1
+PyMongo==4.7.2
+flask_pymongo==2.3.0

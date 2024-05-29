@@ -1,2 +1,2 @@
 
-from .models import Text2TextOperation, Text2TextOperationStoryboard
+from .models import Text2ImageOperation, Text2ImageOperationImage

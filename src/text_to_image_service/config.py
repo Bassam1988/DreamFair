@@ -23,3 +23,6 @@ class Config:
     OPENAI_KEY = env('OPENAI_SECRET_KEY')
 
     AUTH_SVC_ADDRESS = "http://127.0.0.1:5000"
+
+    MONGODB_URI = env(
+        'MONGODB_URI', default='mongodb://127.0.0.1:27017/t2m_images')

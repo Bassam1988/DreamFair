@@ -2,31 +2,31 @@
 from marshmallow import Schema, fields
 
 
-class StoryboardText2TextOperationSchema(Schema):
+class ImageText2ImageOperationSchema(Schema):
     id = fields.UUID(dump_only=True)
-    generated_text = fields.Str(dump_only=True)
+    scene_text = fields.Str(dump_only=True)
     order = fields.Int(dump_only=True)
+    url = fields.Str(dump_only=True)
 
 
-class Text2TextOperationSchema(Schema):
+class Text2ImageOperationSchema(Schema):
     id = fields.UUID(dump_only=True)
     reference = fields.Str(required=True)
-    original_text = fields.Str()
-    generated_text = fields.Str()
-    generated_script = fields.Str()
-    storyboards = fields.Nested(
-        StoryboardText2TextOperationSchema, many=True, dump_only=True)  # type: ignore
+    script_text = fields.Str()
+    images = fields.Nested(
+        ImageText2ImageOperationSchema, many=True, dump_only=True)  # type: ignore
 
 
-class Text2TextOperationStoryboardSchema(Schema):
+class Text2ImageOperationImagesSchema(Schema):
     id = fields.UUID(dump_only=True)
-    name = fields.Str(required=True)
+    reference = fields.Str(dump_only=True)
 
 
-class StoryboardSchema(Schema):
+class ImagesSchema(Schema):
     id = fields.UUID(dump_only=True)
-    generated_text = fields.Str(required=True)
-    order = fields.Int()
-    text2text_operation_id = fields.UUID(load_only=True)
-    text2text_operation = fields.Nested(
-        Text2TextOperationStoryboardSchema, dump_only=True)
+    scene_text = fields.Str(required=True)
+    order = fields.Int(required=True)
+    url = fields.Str(required=True)
+    text2image_operation_id = fields.UUID(load_only=True)
+    text2image_operation = fields.Nested(
+        Text2ImageOperationImagesSchema, dump_only=True)
