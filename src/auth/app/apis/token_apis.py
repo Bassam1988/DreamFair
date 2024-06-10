@@ -5,6 +5,11 @@ from ..schemas.schemas import UserSchema
 from flask import current_app
 from flask import Blueprint, request, jsonify
 import jwt
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 token_blueprint = Blueprint('token', __name__)
 
@@ -17,7 +22,7 @@ def refresh_access_token():
 
     try:
         data = jwt.decode(
-            refresh_token, current_app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
+            refresh_token, os.getenv('JWT_SECRET'), algorithms=["HS256"])
         if data['type'] == 'refresh':
             new_access_token = generate_access_token(data['user_id'])
             return jsonify({'access_token': new_access_token})

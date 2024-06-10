@@ -1,7 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 
 Base = declarative_base()
 db_session = None
@@ -10,8 +14,16 @@ db_session = None
 def init_db(app):
     global db_session
     if app:
-        engine = create_engine(
-            app.config['SQLALCHEMY_DATABASE_URI'], echo=True)
+        db_name = os.getenv('P_DATABASE_NAME')
+        db_user = os.getenv('P_DB_USER')
+
+        db_password = os.getenv('P_DB_PASS')
+        db_type = os.getenv('P_DB_TYPE')
+        db_host = os.getenv('P_DB_HOST')
+
+        db_uri = db_type+'://'+db_user + \
+            ':'+db_password+'@'+db_host+'/'+db_name
+        engine = create_engine(db_uri, echo=True)
         session_factory = sessionmaker(
             bind=engine, autocommit=False, autoflush=False)
         db_session = scoped_session(session_factory)

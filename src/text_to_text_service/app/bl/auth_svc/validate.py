@@ -1,13 +1,17 @@
-from flask import current_app
-
-import json
 import requests
+import json
+from flask import current_app
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def token_required_bl(token):
 
     response = requests.get(
-        f"{current_app.config.get('AUTH_SVC_ADDRESS')}/token/validate",
+        f"{os.getenv('AUTH_SVC_ADDRESS')}/token/validate",
         headers={"Authorization": token},
     )
 
@@ -17,4 +21,3 @@ def token_required_bl(token):
         return {'current_user': user_data, 'message': '', 'status': 200}
     else:
         return {'message': response.text, 'status': response.status_code}
-

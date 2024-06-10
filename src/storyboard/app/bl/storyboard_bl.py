@@ -1,8 +1,17 @@
-from sqlalchemy.orm import joinedload
-
-from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, VideoDuration
-from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, VideoDurationSchema
 from ..database import db_session
+from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, VideoDurationSchema
+from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, VideoDuration
+from .queue.rabbitmq import RabbitMQ
+from sqlalchemy.orm import joinedload
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+
+text_to_text_queue = RabbitMQ(host=str(os.getenv(
+    'RMQ_HOST')), port=os.getenv('RMQ_PORT'))
 
 
 def get_all_projects(user_id):
@@ -85,5 +94,26 @@ def get_project_storyboard_bl(user_id, project_id):
         options(joinedload(Storyboard.project)).all()
     if project_storyboards:
         data = project_storyboard_schema.dump(project_storyboards, many=True)
+        return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}
+
+
+def send_synopsis(user_id, project_id):
+    project_schema = ProjectSchema()
+    project = Project.query.get(project_id)
+    if project and str(project.user_id) == user_id:
+        synopsis = project.synopsis
+        reference = str(project.id)
+        script_style = project.script_style.name
+        video_duration = project.video_duration.name
+        message = {
+            "reference": reference,
+            "synopsis": synopsis,
+            "script_style": script_style,
+            "video_duration": video_duration,
+        }
+        text_to_text_queue.send_message(
+            message=message, routing_key=os.getenv('RMQ_QUEUE'))
+        data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}

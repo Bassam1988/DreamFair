@@ -1,5 +1,10 @@
-from ..database import init_db
 from flask import request,  current_app, redirect
+from ..database import init_db
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def initialize_database(app):
@@ -15,7 +20,7 @@ def set_hsts_header(response):
 
 def https_redirect():
     # Check if the request is secure (HTTPS) and if the app is not in development mode
-    if not request.is_secure and current_app.config['ENV'] != 'development':
+    if not request.is_secure and os.getenv('ENV') != 'development':
         # Replace 'http://' with 'https://' in the request URL
         secure_url = request.url.replace('http://', 'https://', 1)
         # Redirect to the secure URL with status code 301 (Moved Permanently)

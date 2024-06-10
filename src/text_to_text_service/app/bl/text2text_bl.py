@@ -1,17 +1,21 @@
-import ast
 import json
-from sqlalchemy.orm import joinedload
-from flask import current_app
+import ast
 from openai import OpenAI
-
+from .queue.rabbitmq import RabbitMQ
 from ..models.models import Text2TextOperation, Text2TextOperationStoryboard
-
-
 from ..schemas.schemas import StoryboardSchema, Text2TextOperationSchema
-from ..database import db_session
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 
-def create_operation_storyboard(dict_data, response_data_message, reference, prompt):
+text_to_text_queue = RabbitMQ(host=os.getenv(
+    'RMQ_HOST'), port=os.getenv('RMQ_PORT'))
+
+
+def create_operation_storyboard(dict_data, response_data_message, reference, prompt, db_session):
     text2text_operation_schema = Text2TextOperationSchema()
     text2text_operation_data = {
         'reference': reference,
@@ -50,7 +54,7 @@ def create_operation_storyboard(dict_data, response_data_message, reference, pro
     db_session.commit()
 
 
-def generate_script(data):
+def generate_script(data, db_session, for_consumer=False):
     """Generates a script using OpenAI based on user inputs.
 
     Args:
@@ -61,11 +65,14 @@ def generate_script(data):
     Returns:
         str: The generated script or an error message.
     """
+    if for_consumer:
+        data = json.loads(data)
     synopsis = data['synopsis']
     script_style = data['script_style']
     video_duration = data['video_duration']
     reference = data.get('reference', None)
-    openai_key = current_app.config.get('OPENAI_KEY')
+    openai_key = os.getenv('OPENAI_SECRET_KEY')
+
     client = OpenAI(api_key=openai_key)
     prompt = f"Generate a script in the style of {script_style} for a video lasting {video_duration},\
           inspired by the following synopsis: {synopsis}.\
@@ -98,9 +105,23 @@ def generate_script(data):
                 raise e
 
         create_operation_storyboard(
-            dict_data, response_data_message, reference, prompt)
+            dict_data, response_data_message, reference, prompt, db_session)
         response_data = {'data': dict_data}
-
+        if for_consumer:
+            return
         return response_data
     except Exception as e:
         return "Failed to generate script."
+
+
+def consumer_bl(db_session):
+    try:
+        callback_func = text_to_text_queue.create_callback(
+            generate_script, db_session)
+        text_to_text_queue.consumer(queue=os.getenv(
+            'RMQ_QUEUE'), callback=callback_func)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        db_session.rollback()
+    finally:
+        db_session.close()

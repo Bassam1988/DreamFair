@@ -1,8 +1,13 @@
-import datetime
-from ..models.r_token import RefreshToken
-import jwt
-from flask import current_app
 from ..database import db_session
+from flask import current_app
+import jwt
+from ..models.r_token import RefreshToken
+import datetime
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def generate_token(user_id, role):
@@ -14,7 +19,7 @@ def generate_token(user_id, role):
         'role': role
     }
     token = jwt.encode(
-        payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+        payload, os.getenv('JWT_SECRET'), algorithm='HS256')
     return token
 
 
@@ -27,7 +32,7 @@ def generate_access_token(user_id):
         'type': 'access'
     }
     token = jwt.encode(
-        payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+        payload, os.getenv('JWT_SECRET'), algorithm='HS256')
     return token
 
 
@@ -40,14 +45,14 @@ def generate_refresh_token(user_id):
         'type': 'refresh'  # Optionally distinguish between token types
     }
     refresh_token = jwt.encode(
-        payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+        payload, os.getenv('JWT_SECRET'), algorithm='HS256')
     return refresh_token
 
 
 def issue_refresh_token(user):
     expiry = datetime.datetime.utcnow() + datetime.timedelta(days=30)  # 30 days validity
     token = jwt.encode({'user_id': str(user.id), 'exp': expiry},
-                       current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+                       os.getenv('JWT_SECRET'), algorithm='HS256')
 
     # Save the token in the database
     refresh_token = RefreshToken(

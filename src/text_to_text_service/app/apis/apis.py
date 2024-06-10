@@ -2,6 +2,7 @@
 from ..bl.text2text_bl import generate_script
 from ..bl.auth_svc.validate import token_required_bl
 from ..helper.custom_response import CustomResponse
+from ..database import db_session
 
 
 from flask import Blueprint, request
@@ -38,6 +39,6 @@ def create_script(current_user):
         data = request.get_json()
     else:
         data = request.form
-    result = generate_script(data)
+    result = generate_script(data, db_session=db_session)
     data = result['data']
     return CustomResponse(succeeded=True, data=data, status=200)

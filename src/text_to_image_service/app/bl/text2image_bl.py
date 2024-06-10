@@ -1,30 +1,31 @@
-import ast
-import json
-from sqlalchemy.orm import joinedload
-from flask import current_app
-from openai import OpenAI
-from flask_pymongo import PyMongo
-import gridfs
-import requests
-from io import BytesIO
-from bson import ObjectId
-
-from ..models.models import Text2ImageOperation, Text2ImageOperationImage
-
-from ..storage import util
-
-from ..schemas.schemas import Text2ImageOperationSchema, ImagesSchema
 from ..database import db_session
+from ..schemas.schemas import Text2ImageOperationSchema, ImagesSchema
+from ..storage import util
+from ..models.models import Text2ImageOperation, Text2ImageOperationImage
+from bson import ObjectId
+from io import BytesIO
+import requests
+import gridfs
+from flask_pymongo import PyMongo
+from openai import OpenAI
+from flask import current_app
+from sqlalchemy.orm import joinedload
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 mongo_image = PyMongo(
     current_app,
-    uri=current_app.config.get('MONGODB_URI')
+    uri=os.getenv('MONGODB_URI')
 )
 fs_images = gridfs.GridFS(mongo_image.db)
 
 
 def generate_image(prompt):
-    openai_key = current_app.config.get('OPENAI_KEY')
+    openai_key = os.getenv('OPENAI_KEY')
     client = OpenAI(api_key=openai_key)
 
     response = client.images.generate(
