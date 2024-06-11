@@ -5,11 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File",
+            "name": "Python Debugger: Flask",
             "type": "debugpy",
             "request": "launch",
-            "program": "text_to_text_service//consumer.py",
-            "console": "integratedTerminal"
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "storyboard\\run.py",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload",
+                "--port",
+                "5001"
+            ],
+            "jinja": true,
+            "autoStartBrowser": false
         }
     ]
 }
