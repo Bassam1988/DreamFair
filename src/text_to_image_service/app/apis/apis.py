@@ -6,6 +6,8 @@ from ..helper.custom_response import CustomResponse
 from flask import current_app
 from flask import Blueprint, request, render_template_string
 
+from ..database import db_session
+
 from functools import wraps
 
 
@@ -38,7 +40,7 @@ def create_storyboards(current_user):
         data = request.get_json()
     else:
         data = request.form
-    result = generate_storyboards(data)
+    result = generate_storyboards(data, db_session=db_session)
     data = result['data']
     return CustomResponse(succeeded=True, data=data, status=200)
 

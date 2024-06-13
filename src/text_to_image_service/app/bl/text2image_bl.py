@@ -1,4 +1,7 @@
-from ..database import db_session
+import json
+
+from ..helper.mongo_db import MongoDBClient
+from .queue.rabbitmq import RabbitMQ
 from ..schemas.schemas import Text2ImageOperationSchema, ImagesSchema
 from ..storage import util
 from ..models.models import Text2ImageOperation, Text2ImageOperationImage
@@ -16,16 +19,24 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+text_to_image_queue = RabbitMQ(host=os.getenv(
+    'RMQ_HOST'), port=os.getenv('RMQ_PORT'))
 
-mongo_image = PyMongo(
-    current_app,
-    uri=os.getenv('MONGODB_URI')
-)
-fs_images = gridfs.GridFS(mongo_image.db)
+# mongo_image = PyMongo(
+#     current_app,
+#     uri=os.getenv('MONGODB_URI_DB')
+# )
+# fs_images = gridfs.GridFS(mongo_image.db)
+
+
+uri, db_name = os.getenv('MONGODB_URI'), os.getenv('MONGODB_DB')
+mongo_client = MongoDBClient(uri, db_name)
+
+fs_images = mongo_client.fs_db
 
 
 def generate_image(prompt):
-    openai_key = os.getenv('OPENAI_KEY')
+    openai_key = os.getenv('OPENAI_SECRET_KEY')
     client = OpenAI(api_key=openai_key)
 
     response = client.images.generate(
@@ -44,7 +55,7 @@ def download_image(url):
     return BytesIO(response.content)
 
 
-def create_storyboard_operation_images(images_data, reference, orginal_script):
+def create_storyboard_operation_images(images_data, reference, orginal_script, db_session):
     text2image_operation_schema = Text2ImageOperationSchema()
     text2image_operation_data = {
         'reference': reference,
@@ -92,7 +103,7 @@ def create_storyboard_operation_images(images_data, reference, orginal_script):
         raise e
 
 
-def generate_storyboards(data):
+def generate_storyboards(data, db_session, for_consumer=False):
     """Generates storyboards using DALL·E based on the script and user preferences.
 
     Args:
@@ -105,12 +116,14 @@ def generate_storyboards(data):
         list: URLs of the generated storyboard images or error message placeholders.
     """
     # storyboards stylse, size, and other data
-    orginal_script = data['script']
+    if for_consumer:
+        data = json.loads(data)
+    orginal_script = data['orginal_script']
     prompts = data['prompts']
     reference = data['reference']
-    detail_description = data['detail_description']
+    aspect_ratio = data['aspect_ratio']
     color_description = data['color_description']
-    storyboard_style = 'Sketch/Doodly'
+    storyboard_style = data['storyboard_style']
 
     images_data = []
     # prompt = f"I will give you the totla script, and the prompt of each image inside that script,"\
@@ -124,14 +137,16 @@ def generate_storyboards(data):
     for key, value in prompts.items():
         prompt = f"I will give you the totla script, and the prompt of the image inside that script,"\
             f"the total script: {orginal_script} \n"\
-            f" Create a {color_description}, {detail_description} storyboard in the style of {storyboard_style} based on this storyboard description:{value}.\n"\
+            f" Create a {color_description}, {aspect_ratio} storyboard in the style of {storyboard_style} based on this storyboard description:{value}.\n"\
 
         image_url = generate_image(prompt)
         image_data = {'order': key, 'prompt': prompt, 'url': image_url}
 
         images_data.append(image_data)
-    create_storyboard_operation_images(images_data, reference, orginal_script)
-
+    create_storyboard_operation_images(
+        images_data, reference, orginal_script, db_session)
+    if for_consumer:
+        return
     return {'data': images_data, }
 
 
@@ -153,3 +168,16 @@ def get_images_id(ref_id):
         except gridfs.errors.NoFile:
             images_data.append({'id': file_id, 'content': None})
     return images_data
+
+
+def consumer_bl(db_session):
+    try:
+        callback_func = text_to_image_queue.create_callback(
+            generate_storyboards, db_session)
+        text_to_image_queue.consumer(queue=os.getenv(
+            'RMQ_QUEUE'), callback=callback_func)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        db_session.rollback()
+    finally:
+        db_session.close()

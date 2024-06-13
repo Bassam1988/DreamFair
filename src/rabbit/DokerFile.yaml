@@ -6,7 +6,11 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - C:\Data\rabbitMQ:/var/lib/rabbitmq/mnesia
+      - rabbitmq_data:/var/lib/rabbitmq/mnesia
     environment:
       - RABBITMQ_NODENAME=my-rabbit@localhost
     restart: always
+
+volumes:
+  rabbitmq_data:
+    external: false

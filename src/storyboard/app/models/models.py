@@ -55,7 +55,7 @@ class Project(Base):
     user_id = Column(UUID(as_uuid=True), nullable=False)
     name = Column(String(150))
     synopsis = Column(String(2500))
-    script = Column(String(2500))
+    script = Column(String(25000))
     script_style_id = Column(UUID, ForeignKey('script_styles.id'))
     script_style = relationship("ScriptStyle", back_populates="projects")
     storyboard_style_id = Column(UUID, ForeignKey(
@@ -80,5 +80,6 @@ class Storyboard(Base):
     project_id = Column(UUID, ForeignKey('projects.id'), nullable=False)
     project = relationship("Project", back_populates="storyboards")
     name = Column(String(150))
-    image = Column(String(2500))
-    scene_description = Column(String(2500))
+    image = Column(String(25000))
+    scene_description = Column(String(25000))
+    order = Column(Integer)

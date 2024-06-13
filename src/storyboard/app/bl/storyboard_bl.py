@@ -117,3 +117,34 @@ def send_synopsis(user_id, project_id):
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
+
+
+def send_script(user_id, project_id):
+    project_schema = ProjectSchema()
+    project = Project.query.get(project_id)
+    if project and str(project.user_id) == user_id:
+
+        reference = str(project.id)
+
+        orginal_script = project.script
+
+        prompts = {prompt.order: prompt.scene_description
+                   for prompt in project.storyboards}
+
+        aspect_ratio = project.aspect_ratio.name
+        boards_per_min = project.boards_per_min.count
+        storyboard_style = project.storyboard_style.name
+
+        message = {
+            "reference": reference,
+            "orginal_script": orginal_script,
+            "prompts": prompts,
+            "aspect_ratio": aspect_ratio,
+            "color_description": boards_per_min,
+            "storyboard_style": storyboard_style,
+        }
+        text_to_text_queue.send_message(
+            message=message, routing_key=os.getenv('RMQ_IMAGE_QUEUE'))
+        data = project_schema.dump(project)
+        return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}
