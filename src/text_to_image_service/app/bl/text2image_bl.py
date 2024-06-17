@@ -70,6 +70,7 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
     db_session.add(text2image_operation)
     db_session.flush()
     images_id = []
+    returned_data = {}
     try:
         text2image_operation_id = text2image_operation.id
         for image_data in images_data:
@@ -77,6 +78,7 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
             image_byte = download_image(image_url)
             url = util.save_to_db(image_byte, image_data['order'], fs_images)
             images_id.append(url)
+            returned_data[image_data['order']] = str(url)
             image_db_data = {
                 'text2image_operation_id': text2image_operation_id,
                 'order': image_data['order'],
@@ -94,7 +96,7 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
         if images_list:
             db_session.bulk_save_objects(images_list)
         db_session.commit()
-        return images_id
+        return returned_data
     except Exception as e:
         if images_id:
             # delete images from MongoDB
@@ -143,14 +145,23 @@ def generate_storyboards(data, db_session, for_consumer=False):
         image_data = {'order': key, 'prompt': prompt, 'url': image_url}
 
         images_data.append(image_data)
-    create_storyboard_operation_images(
+    returned_data = create_storyboard_operation_images(
         images_data, reference, orginal_script, db_session)
     if for_consumer:
+        # send message to text_to_message_notification
+        set_message_storyboards_images(reference, returned_data)
         return
     return {'data': images_data, }
 
 
-def get_images_id(ref_id):
+def set_message_storyboards_images(reference, dict_data):
+    message = {'reference': reference,
+               'images_data': dict_data}
+    text_to_image_queue.send_message(routing_key=os.getenv(
+        'RMQ_storyboard_QUEUE'), message=message)
+
+
+def get_images_id(ref_id, db_session):
     t2m_op = Text2ImageOperation.query.filter_by(reference=ref_id).first()
     images = db_session.query(Text2ImageOperationImage).filter_by(
         text2image_operation_id=t2m_op.id).order_by(Text2ImageOperationImage.order).all()

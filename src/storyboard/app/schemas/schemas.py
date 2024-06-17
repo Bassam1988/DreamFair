@@ -74,6 +74,7 @@ class StoryboardSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
     image = fields.Str()
+    order = fields.Int()
     scene_description = fields.Str()
     project_id = fields.UUID(load_only=True)
     project = fields.Nested(StoryboardProjectSchema, dump_only=True)

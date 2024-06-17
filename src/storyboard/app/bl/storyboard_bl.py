@@ -1,3 +1,4 @@
+import json
 from ..database import db_session
 from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, VideoDurationSchema
 from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, VideoDuration
@@ -148,3 +149,75 @@ def send_script(user_id, project_id):
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
+
+
+def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
+    dict_data = json.loads(data)
+    storyboards_list = []
+    project_id = dict_data['reference']
+    project = Project.query.get(project_id)
+    if project:
+        storyboards = dict_data['storyboards']
+        project_script = dict_data['script']
+        project.script = project_script
+        for key, value in storyboards.items():
+            storyboard_data = {
+                'project_id': project.id,
+                'order': key,
+                'scene_description': value,
+                'name': key
+            }
+            storyboard_schema = StoryboardSchema()
+            errors = storyboard_schema.validate(storyboard_data)
+            if errors:
+                raise Exception(errors)
+            storyboard = Storyboard(**storyboard_data)
+            storyboards_list.append(storyboard)
+
+        if storyboards_list:
+            db_session.bulk_save_objects(storyboards_list)
+        db_session.commit()
+        return
+    return "error"
+
+
+def set_scribt_storyboard_images(data, db_session, for_consumer=True):
+    dict_data = json.loads(data)
+
+    project_id = dict_data['reference']
+    project = Project.query.get(project_id)
+    if project:
+        images_data = dict_data['images_data']
+        storyboards = db_session.query(Storyboard).filter_by(
+            project_id=project.id).order_by(Storyboard.order).all()
+        for storyboard in storyboards:
+            storyboard.image = images_data[str(storyboard.order)]
+        db_session.commit()
+        return
+    return "error"
+
+
+def t2t_consumer_bl(db_session):
+    try:
+        callback_func = text_to_text_queue.create_callback(
+            set_scribt_storyboard_desc, db_session)
+        text_to_text_queue.consumer(queue=os.getenv(
+            'RMQ_T2T_N_QUEUE'), callback=callback_func)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        db_session.rollback()
+    finally:
+        db_session.close()
+
+
+def t2m_consumer_bl(db_session):
+    try:
+        callback_func = text_to_text_queue.create_callback(
+            set_scribt_storyboard_images, db_session)
+        text_to_text_queue.consumer(queue=os.getenv(
+            'RMQ_T2M_N_QUEUE'), callback=callback_func)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        db_session.rollback()
+    finally:
+        db_session.close()

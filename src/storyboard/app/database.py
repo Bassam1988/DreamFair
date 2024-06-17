@@ -45,3 +45,25 @@ def shutdown_session(exception=None):
         else:
             db_session.rollback()
         db_session.remove()
+
+
+def init_consumer_db():
+    db_name = os.getenv('P_DATABASE_NAME')
+    db_user = os.getenv('P_DB_USER')
+
+    db_password = os.getenv('P_DB_PASS')
+    db_type = os.getenv('P_DB_TYPE')
+    db_host = os.getenv('P_DB_HOST')
+
+    db_uri = db_type+'://'+db_user + \
+        ':'+db_password+'@'+db_host+'/'+db_name
+    engine = create_engine(db_uri, echo=True)
+    # Update with your actual DB URI
+    session_factory = sessionmaker(
+        autocommit=False, autoflush=False, bind=engine)
+    db_session = scoped_session(session_factory)
+    Base.query = db_session.query_property()
+    from app import models  # Import all models
+    Base.metadata.create_all(bind=engine)
+
+    return db_session

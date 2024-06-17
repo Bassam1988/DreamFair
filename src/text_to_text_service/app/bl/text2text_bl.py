@@ -108,10 +108,18 @@ def generate_script(data, db_session, for_consumer=False):
             dict_data, response_data_message, reference, prompt, db_session)
         response_data = {'data': dict_data}
         if for_consumer:
+            # insert result in text2text_notification queue to get it to storyboard app
+            set_message_storyboards(reference=reference, dict_data=dict_data)
             return
         return response_data
     except Exception as e:
         return "Failed to generate script."
+
+
+def set_message_storyboards(reference, dict_data):
+    dict_data['reference'] = reference
+    text_to_text_queue.send_message(routing_key=os.getenv(
+        'RMQ_storyboard_QUEUE'), message=dict_data)
 
 
 def consumer_bl(db_session):
