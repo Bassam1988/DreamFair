@@ -16,7 +16,7 @@ def login(request):
     # basicAuth = (auth.username, auth.password)
 
     response = requests.post(
-        f"{main_url}/auth/login",
+        f"{os.getenv('AUTH_SVC_ADDRESS')}/auth/login",
         json=auth
     )
 
@@ -32,7 +32,7 @@ def register(request):
         return None, ("This data is required", 401)
 
     response = requests.post(
-        f"{main_url}/auth/register",
+        f"{os.environ.get('AUTH_SVC_ADDRESS')}/auth/register",
         json=data
     )
 
