@@ -1,5 +1,7 @@
 
 from flask import Blueprint, request
+
+from ..helper.custom_response import CustomResponse
 from ..services.auth_svc import access
 
 gateway_auth_blueprint = Blueprint(
@@ -8,19 +10,13 @@ gateway_auth_blueprint = Blueprint(
 
 @gateway_auth_blueprint.route("/login", methods=["POST"])
 def login():
-    token, err = access.login(request)
+    data, message, success, status = access.login(request)
 
-    if not err:
-        return token
-    else:
-        return err
+    return CustomResponse(succeeded=success, message=message, status=status, data=data)
 
 
 @gateway_auth_blueprint.route("/register", methods=["POST"])
 def register():
-    token, err = access.register(request)
+    data, message, success, status = access.register(request)
 
-    if not err:
-        return token
-    else:
-        return err
+    return CustomResponse(succeeded=success, message=message, status=status, data=data)

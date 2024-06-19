@@ -11,7 +11,7 @@ main_url = os.getenv('AUTH_SVC_ADDRESS')
 def login(request):
     auth = request.json
     if not auth:
-        return None, ("missing credentials", 401)
+        return {}, "missing credentials", False, 401
 
     # basicAuth = (auth.username, auth.password)
 
@@ -20,10 +20,8 @@ def login(request):
         json=auth
     )
 
-    if response.status_code == 200:
-        return response.text, None
-    else:
-        return None, (response.text, response.status_code)
+    res_data = response.json()
+    return res_data['data'], res_data['message'], res_data['succeeded'], response.status_code
 
 
 def register(request):
@@ -36,7 +34,5 @@ def register(request):
         json=data
     )
 
-    if response.status_code == 200:
-        return response.text, None
-    else:
-        return None, (response.text, response.status_code)
+    res_data = response.json()
+    return res_data['data'], res_data['message'], res_data['succeeded'], response.status_code
