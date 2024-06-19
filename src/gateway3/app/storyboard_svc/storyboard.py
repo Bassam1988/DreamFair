@@ -8,19 +8,14 @@ load_dotenv()
 main_url = {os.getenv('AUTH_SVC_ADDRESS')}
 
 
-def login(request):
-    auth = request.json
-    if not auth:
-        return None, ("missing credentials", 401)
+def get_storyboard_user_project(user_id):
+    response = requests.get(
+        f"{os.getenv('AUTH_SVC_ADDRESS')}/auth/login/{user_id}",
 
-    # basicAuth = (auth.username, auth.password)
-
-    response = requests.post(
-        f"{os.getenv('AUTH_SVC_ADDRESS')}/auth/login",
-        json=auth
     )
 
     if response.status_code == 200:
+        data = response.data
         return response.text, None
     else:
         return None, (response.text, response.status_code)

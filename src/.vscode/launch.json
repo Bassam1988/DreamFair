@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "gateway\\server.py",
+                "FLASK_APP": "gateway\\run.py",
                 "FLASK_DEBUG": "1"
             },
             "args": [
@@ -18,7 +18,7 @@
                 "--no-debugger",
                 "--no-reload",
                 "--port",
-                "8080"
+                "5013"
             ],
             "jinja": true,
             "autoStartBrowser": false

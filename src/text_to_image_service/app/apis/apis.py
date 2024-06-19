@@ -11,7 +11,7 @@ from ..database import db_session
 from functools import wraps
 
 
-text2image_blueprint = Blueprint('text2text', __name__)
+text2image_blueprint = Blueprint('text2image', __name__)
 
 
 def token_required(f):

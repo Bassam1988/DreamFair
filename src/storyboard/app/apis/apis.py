@@ -10,7 +10,7 @@ from flask import Blueprint, request
 from functools import wraps
 
 
-storyboard_blueprint = Blueprint('text2text', __name__)
+storyboard_blueprint = Blueprint('storyboard', __name__)
 
 
 def token_required(f):

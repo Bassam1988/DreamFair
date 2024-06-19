@@ -1,13 +1,11 @@
-from flask import Flask, request
-
+from flask import request
 
 from auth_svc import access
 
+from apis import gateway_blueprint
 
-server = Flask(__name__)
 
-
-@server.route("/login", methods=["POST"])
+@gateway_blueprint.route("/login", methods=["POST"])
 def login():
     token, err = access.login(request)
 
@@ -17,7 +15,7 @@ def login():
         return err
 
 
-@server.route("/register", methods=["POST"])
+@gateway_blueprint.route("/register", methods=["POST"])
 def register():
     token, err = access.register(request)
 
@@ -25,7 +23,3 @@ def register():
         return token
     else:
         return err
-
-
-if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=8080)
