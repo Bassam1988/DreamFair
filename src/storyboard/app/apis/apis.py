@@ -64,7 +64,8 @@ def create_project(current_user):
 def script_styles(current_user):
     result = get_all_script_styles()
     data = result['data']
-    return CustomResponse(succeeded=True, data=data, status=200)
+    message = result['message']
+    return CustomResponse(succeeded=True, data=data, message=message, status=200)
 
 
 @storyboard_blueprint.route('/storyboard_styles', methods=['GET'])

@@ -57,7 +57,7 @@ def get_all_script_styles():
     script_style_schema = ScriptStyleSchema()
     script_styles = ScriptStyle.query.all()
     data = script_style_schema.dump(script_styles, many=True)
-    return {'data': data, 'status': 200}
+    return {'data': data, 'message': '', 'status': 200}
 
 
 def get_all_storyboard_styles():
