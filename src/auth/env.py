@@ -25,6 +25,8 @@ config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 # Other Alembic setup...
 target_metadata = Base.metadata
 
+print('sqlalchemy.url', sqlalchemy_url)
+
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
