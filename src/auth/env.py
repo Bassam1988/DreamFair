@@ -19,7 +19,7 @@ db_port = os.getenv('P_DB_PORT')
 sqlalchemy_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
 # Override the sqlalchemy.url in the Alembic configuration
-config = context.configure
+config = context.configure()
 config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 
 # Other Alembic setup...
