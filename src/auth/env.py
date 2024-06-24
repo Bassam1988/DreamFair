@@ -25,10 +25,10 @@ config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 # Other Alembic setup...
 target_metadata = Base.metadata
 
-print('sqlalchemy.url', sqlalchemy_url)
-
 
 def run_migrations_online():
+    print('start:')
+    print('sqlalchemy.url', sqlalchemy_url)
     """Run migrations in 'online' mode."""
     # Create engine directly with the constructed URL
     engine = create_engine(sqlalchemy_url, poolclass=pool.NullPool)
