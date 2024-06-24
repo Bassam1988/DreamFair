@@ -5,7 +5,20 @@ from alembic import context
 from logging.config import fileConfig
 import sys
 import os
+from dotenv import load_dotenv
 
+
+# Load .env file
+load_dotenv()
+
+# Debug print to check environment variables
+print("Loading environment variables...")
+db_user = os.getenv('P_DB_USER')
+db_pass = os.getenv('P_DB_PASS')
+db_host = os.getenv('P_DB_HOST')
+db_name = os.getenv('P_DATABASE_NAME')
+db_port = os.getenv('P_DB_PORT')
+sqlalchemy_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 # It's important to import your models here, so Alembic can access the Base.metadata
 sys.path.append(os.path.realpath(
     os.path.join(os.path.dirname(__file__), '..')))
@@ -18,6 +31,8 @@ fileConfig(config.config_file_name)
 
 # Add metadata
 target_metadata = Base.metadata
+
+config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 
 
 def run_migrations_offline():
