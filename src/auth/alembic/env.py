@@ -25,14 +25,12 @@ sys.path.append(os.path.realpath(
 
 # this is the Alembic Config object, which provides access to the values within the .ini file in use.
 config = context.config
-
+config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 # Interpret the config file for Python logging.
 fileConfig(config.config_file_name)
 
 # Add metadata
 target_metadata = Base.metadata
-
-config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 
 
 def run_migrations_offline():
