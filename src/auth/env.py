@@ -26,21 +26,32 @@ config.set_main_option('sqlalchemy.url', sqlalchemy_url)
 target_metadata = Base.metadata
 
 
+# Load .env file
+load_dotenv()
+
+print("DB User:", db_user)  # Debugging output
+
+# More environment variable fetches and print statements as needed...
+
+sqlalchemy_url = f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+print("Database URL:", sqlalchemy_url)  # Debugging output
+
+
 def run_migrations_online():
-    print('start:')
-    print('sqlalchemy.url', sqlalchemy_url)
     """Run migrations in 'online' mode."""
-    # Create engine directly with the constructed URL
     engine = create_engine(sqlalchemy_url, poolclass=pool.NullPool)
+    connection = engine.connect()
 
-    with engine.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            url=sqlalchemy_url  # Explicitly provide URL here to ensure it is used
-        )
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        url=sqlalchemy_url
+    )
 
+    try:
         with context.begin_transaction():
             context.run_migrations()
+    finally:
+        connection.close()
 
-# Other functions as needed...
+# Make sure to run Alembic commands to trigger this script
