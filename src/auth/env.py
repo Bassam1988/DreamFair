@@ -3,7 +3,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 import os
 from dotenv import load_dotenv
-from .app.database import Base
+from app.database import Base
 
 # Load .env file
 load_dotenv()
