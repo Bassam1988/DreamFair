@@ -9,9 +9,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/mnesia
     environment:
-      - RABBITMQ_NODENAME=my-rabbit
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_NODENAME=my-rabbit      
     restart: always
 
 volumes:
