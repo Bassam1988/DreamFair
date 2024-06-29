@@ -19,8 +19,13 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-text_to_image_queue = RabbitMQ(host=os.getenv(
-    'RMQ_HOST'), port=os.getenv('RMQ_PORT'))
+rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
+rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
+rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
+rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
+
+text_to_image_queue = RabbitMQ(
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
 
 # mongo_image = PyMongo(
 #     current_app,

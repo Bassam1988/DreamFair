@@ -5,16 +5,20 @@ import json
 class RabbitMQ():
     queues = {}
 
-    def __init__(self, host, port) -> None:
+    def __init__(self, host, port, user, password) -> None:
         self.host = host
+        self.port = port
         if self.host in self.queues:
             return
+        credentials = pika.PlainCredentials(user, password)
+
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=host,
                 port=port,
                 heartbeat=600,  # Heartbeat timeout in seconds
-                blocked_connection_timeout=300
+                blocked_connection_timeout=300,
+                credentials=credentials
             ))
         self.queues[host] = connection
 

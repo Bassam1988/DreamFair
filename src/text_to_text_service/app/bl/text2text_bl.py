@@ -9,10 +9,13 @@ import os
 
 # Load environment variables from .env file
 load_dotenv()
+rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
+rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
+rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
+rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
 
-
-text_to_text_queue = RabbitMQ(host=os.getenv(
-    'RMQ_HOST'), port=os.getenv('RMQ_PORT'))
+text_to_text_queue = RabbitMQ(
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
 
 
 def create_operation_storyboard(dict_data, response_data_message, reference, prompt, db_session):
