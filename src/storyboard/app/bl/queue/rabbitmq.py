@@ -5,10 +5,11 @@ import json
 class RabbitMQ():
     queues = {}
 
-    def __init__(self, host, port, user, password) -> None:
+    def __init__(self, host, port, user, password, queue_name) -> None:
         self.host = host
         self.port = port
-        if self.host in self.queues:
+        self.queue_name = queue_name
+        if self.queue_name in self.queues:
             return
         credentials = pika.PlainCredentials(user, password)
 
@@ -21,11 +22,12 @@ class RabbitMQ():
                 virtual_host='/',
                 credentials=credentials
             ))
-        self.queues[host] = connection
+        self.queues[queue_name] = connection
 
     def re_init_connection(self):
         host = self.host
         port = self.port
+        q_name = self.queue_name
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=host,
@@ -34,11 +36,11 @@ class RabbitMQ():
                 blocked_connection_timeout=300,
                 virtual_host='/'
             ))
-        self.queues[host] = connection
+        self.queues[q_name] = connection
 
     def send_message(self, routing_key, message):
         try:
-            channel = self.queues[self.host].channel()
+            channel = self.queues[self.q_name].channel()
             channel.queue_declare(queue=routing_key, durable=True)
             channel.basic_publish(
                 exchange="",
@@ -51,7 +53,7 @@ class RabbitMQ():
         # ConnectionClosed:#StreamLostError
         except pika.exceptions.ConnectionWrongStateError:
             self.re_init_connection()
-            channel = self.queues[self.host].channel()
+            channel = self.queues[self.q_name].channel()
             channel.queue_declare(queue=routing_key, durable=True)
             channel.basic_publish(
                 exchange="",
@@ -72,7 +74,7 @@ class RabbitMQ():
         return callback
 
     def consumer(self, queue, callback):
-        channel = self.queues[self.host].channel()
+        channel = self.queues[self.q_name].channel()
         channel.basic_consume(
             queue=queue, on_message_callback=callback
         )

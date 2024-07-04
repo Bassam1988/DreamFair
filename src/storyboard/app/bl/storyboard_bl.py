@@ -14,13 +14,14 @@ rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
 rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
-
+t_queue = os.getenv('RMQ_T2T_N_QUEUE')
+m_queue = os.getenv('RMQ_T2M_N_QUEUE')
 
 text_to_text_queue = RabbitMQ(
-    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password, queue_name=t_queue)
 
 text_to_image_queue = RabbitMQ(
-    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password, queue_name=m_queue)
 
 
 def get_all_projects(user_id):
@@ -152,7 +153,7 @@ def send_script(user_id, project_id):
             "color_description": boards_per_min,
             "storyboard_style": storyboard_style,
         }
-        text_to_text_queue.send_message(
+        text_to_image_queue.send_message(
             message=message, routing_key=os.getenv('RMQ_IMAGE_QUEUE'))
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
