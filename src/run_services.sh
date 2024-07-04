@@ -33,6 +33,7 @@ start_flask_service() {
     source env/bin/activate
     nohup flask run --port=$PORT > flask_$PORT.log 2>&1 &
     echo $! > flask_$PORT.pid
+    deactivate
     echo "Service at $SERVICE_DIR started on port $PORT"
 }
 
@@ -46,6 +47,7 @@ start_consumer_service() {
     source env/bin/activate
     nohup python3 $SERVICE_DIR > flask_$SERVICE_NAME.log 2>&1 &
     echo $! > flask_$SERVICE_NAME.pid
+    deactivate
     echo "Service at $SERVICE_DIR started for $SERVICE_NAME"
 }
 
@@ -58,9 +60,9 @@ start_flask_service /home/ubuntu/DreamFair/DreamFair/src/storyboard 5001
 start_flask_service /home/ubuntu/DreamFair/DreamFair/src/gateway 8000
 
 
-start_consumer_service /home/ubuntu/DreamFair/DreamFair/src/storyboard storyboard
-start_consumer_service /home/ubuntu/DreamFair/DreamFair/src/text_to_image_service t2m_consumer
-start_consumer_service /home/ubuntu/DreamFair/DreamFair/src/text_to_text_service t2t_consumer
+start_consumer_service /home/ubuntu/DreamFair/DreamFair/src/storyboard/consumer.py storyboard
+start_consumer_service /home/ubuntu/DreamFair/DreamFair/src/text_to_image_service/consumer.py t2m_consumer
+start_consumer_service /home/ubuntu/DreamFair/DreamFair/src/text_to_text_service/consumer.py t2t_consumer
 
 echo "All services have been started."
 
