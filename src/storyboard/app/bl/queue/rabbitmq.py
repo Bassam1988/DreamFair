@@ -40,7 +40,7 @@ class RabbitMQ():
 
     def send_message(self, routing_key, message):
         try:
-            channel = self.queues[self.q_name].channel()
+            channel = self.queues[self.queue_name].channel()
             channel.queue_declare(queue=routing_key, durable=True)
             channel.basic_publish(
                 exchange="",
@@ -53,7 +53,7 @@ class RabbitMQ():
         # ConnectionClosed:#StreamLostError
         except pika.exceptions.ConnectionWrongStateError:
             self.re_init_connection()
-            channel = self.queues[self.q_name].channel()
+            channel = self.queues[self.queue_name].channel()
             channel.queue_declare(queue=routing_key, durable=True)
             channel.basic_publish(
                 exchange="",
@@ -74,7 +74,7 @@ class RabbitMQ():
         return callback
 
     def consumer(self, queue, callback):
-        channel = self.queues[self.q_name].channel()
+        channel = self.queues[self.queue_name].channel()
         channel.basic_consume(
             queue=queue, on_message_callback=callback
         )
