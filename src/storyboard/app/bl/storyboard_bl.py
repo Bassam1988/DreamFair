@@ -19,6 +19,9 @@ rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
 text_to_text_queue = RabbitMQ(
     host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
 
+text_to_image_queue = RabbitMQ(
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
+
 
 def get_all_projects(user_id):
     project_schema = ProjectSchema()
@@ -217,9 +220,9 @@ def t2t_consumer_bl(db_session):
 
 def t2m_consumer_bl(db_session):
     try:
-        callback_func = text_to_text_queue.create_callback(
+        callback_func = text_to_image_queue.create_callback(
             set_scribt_storyboard_images, db_session)
-        text_to_text_queue.consumer(queue=os.getenv(
+        text_to_image_queue.consumer(queue=os.getenv(
             'RMQ_T2M_N_QUEUE'), callback=callback_func)
     except Exception as e:
         print(f"An error occurred: {e}")

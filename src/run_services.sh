@@ -45,7 +45,7 @@ start_consumer_service() {
     echo "Starting service in $SERVICE_DIR ...for $SERVICE_NAME"
     cd $SERVICE_DIR
     source env/bin/activate
-    nohup python3 $SERVICE_DIR/consumer.py > flask_$SERVICE_NAME.log 2>&1 &
+    nohup python3 consumer.py > flask_$SERVICE_NAME.log 2>&1 &
     echo $! > flask_$SERVICE_NAME.pid
     deactivate
     echo "Service at $SERVICE_DIR started for $SERVICE_NAME"
