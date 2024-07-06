@@ -21,19 +21,19 @@ if __name__ == "__main__":
     # Create processes for each consumer
     process1 = Process(target=run_consumer_bl, args=(
         storyboard_bl.t2t_consumer_bl,))
-    # process2 = Process(target=run_consumer_bl, args=(
-    #     storyboard_bl.t2m_consumer_bl,))
+    process2 = Process(target=run_consumer_bl, args=(
+        storyboard_bl.t2m_consumer_bl,))
 
     process1.start()
-    # process2.start()
+    process2.start()
 
     try:
         # Wait for both processes to complete, which they never will unless interrupted
         process1.join()
-        # process2.join()
+        process2.join()
     except KeyboardInterrupt:
         print("Main process interrupted")
         process1.terminate()
-        # process2.terminate()
+        process2.terminate()
     finally:
         sys.exit(0)

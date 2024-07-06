@@ -27,3 +27,13 @@ class Text2ImageOperationImage(Base):
     scene_text = Column(String(10000))
     order = Column(Integer)
     url = Column(String(250))
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+
+
+class OperationErrors(Base):
+    __tablename__ = 'operation_error'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reference = Column(String(50))
+    script_text = Column(String(10000))
+    error = Column(String(25000))
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))

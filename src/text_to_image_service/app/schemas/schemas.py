@@ -30,3 +30,11 @@ class ImagesSchema(Schema):
     text2image_operation_id = fields.UUID(load_only=True)
     text2image_operation = fields.Nested(
         Text2ImageOperationImagesSchema, dump_only=True)
+
+
+class OperationErrorSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    reference = fields.Str(required=True)
+    script_text = fields.Str(required=True)
+    error = fields.Str(required=True)
+    created_date = fields.Date(dump_only=True)

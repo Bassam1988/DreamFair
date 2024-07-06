@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 # Load .env file
 load_dotenv()
 
+
 # Debug print to check environment variables
 print("Loading environment variables...")
 db_user = os.getenv('P_DB_USER')
