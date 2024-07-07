@@ -1,9 +1,10 @@
 # myapp/models.py
 from ..database import Base
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID  # Specific to PostgreSQL
 import uuid
+from datetime import datetime, timezone
 
 
 class ScriptStyle(Base):
@@ -72,6 +73,7 @@ class Project(Base):
         'boards_per_mins.id'))
     boards_per_min = relationship("BoardsPerMin", back_populates="projects")
     storyboards = relationship("Storyboard", back_populates="project")
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))
 
 
 class Storyboard(Base):
@@ -83,3 +85,22 @@ class Storyboard(Base):
     image = Column(String(25000))
     scene_description = Column(String(25000))
     order = Column(Integer)
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+
+
+class T2TOperationErrors(Base):
+    __tablename__ = 't2t_operation_error'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reference = Column(String(50))
+    script_text = Column(String(10000))
+    error = Column(String(25000))
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+
+
+class T2IOperationErrors(Base):
+    __tablename__ = 't2i_operation_error'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reference = Column(String(50))
+    script_text = Column(String(10000))
+    error = Column(String(25000))
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))

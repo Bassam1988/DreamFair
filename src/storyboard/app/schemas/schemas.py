@@ -78,3 +78,19 @@ class StoryboardSchema(Schema):
     scene_description = fields.Str()
     project_id = fields.UUID(load_only=True)
     project = fields.Nested(StoryboardProjectSchema, dump_only=True)
+
+
+class T2TOperationErrorSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    reference = fields.Str(required=True)
+    script_text = fields.Str(required=True)
+    error = fields.Str(required=True)
+    created_date = fields.Date(dump_only=True)
+
+
+class T2IOperationErrorSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    reference = fields.Str(required=True)
+    script_text = fields.Str(required=True)
+    error = fields.Str(required=True)
+    created_date = fields.Date(dump_only=True)

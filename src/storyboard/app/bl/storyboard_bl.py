@@ -1,7 +1,7 @@
 import json
 from ..database import db_session
-from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, VideoDurationSchema
-from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, VideoDuration
+from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, T2IOperationErrorSchema, T2TOperationErrorSchema, VideoDurationSchema
+from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, T2IOperationErrors, T2TOperationErrors, VideoDuration
 from .queue.rabbitmq import RabbitMQ
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
@@ -160,50 +160,112 @@ def send_script(user_id, project_id):
     return {'message': 'No data found', 'status': 404}
 
 
-def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
-    dict_data = json.loads(data)
-    storyboards_list = []
-    project_id = dict_data['reference']
-    project = Project.query.get(project_id)
-    if project:
-        storyboards = dict_data['storyboards']
-        project_script = dict_data['script']
-        project.script = project_script
-        for key, value in storyboards.items():
-            storyboard_data = {
-                'project_id': project.id,
-                'order': key,
-                'scene_description': value,
-                'name': key
-            }
-            storyboard_schema = StoryboardSchema()
-            errors = storyboard_schema.validate(storyboard_data)
-            if errors:
-                raise Exception(errors)
-            storyboard = Storyboard(**storyboard_data)
-            storyboards_list.append(storyboard)
+def t2t_insert_error(reference, error, message, db_session):
+    operation_error_schema = T2TOperationErrorSchema()
+    operation_error_data = {
+        'reference': reference,
+        'script_text': message,
+        "error": error
+    }
+    errors = operation_error_schema.validate(operation_error_data)
+    if errors:
+        raise Exception(errors)
+    operation_error = T2TOperationErrors(**operation_error_data)
+    db_session.add(operation_error)
+    db_session.commit()
 
-        if storyboards_list:
-            db_session.bulk_save_objects(storyboards_list)
-        db_session.commit()
-        return
-    return "error"
+
+def t2t_error_processing(reference, error, message, db_session):
+    try:
+        t2t_insert_error(reference, error, message, db_session)
+    except Exception as e:
+        pass
+
+
+def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
+    try:
+        dict_data = json.loads(data)
+        storyboards_list = []
+        project_id = dict_data['reference']
+        project = Project.query.get(project_id)
+        if project:
+            storyboards = dict_data['storyboards']
+            project_script = dict_data['script']
+            project.script = project_script
+            for key, value in storyboards.items():
+                storyboard_data = {
+                    'project_id': project.id,
+                    'order': key,
+                    'scene_description': value,
+                    'name': key
+                }
+                storyboard_schema = StoryboardSchema()
+                errors = storyboard_schema.validate(storyboard_data)
+                if errors:
+                    raise Exception(errors)
+                storyboard = Storyboard(**storyboard_data)
+                storyboards_list.append(storyboard)
+
+            if storyboards_list:
+                db_session.bulk_save_objects(storyboards_list)
+            db_session.commit()
+            return
+        return "error"
+    except Exception as e:
+        if for_consumer:
+            # insert in error table
+            t2t_error_processing(project_id, str(e.args),
+                                 project_script, db_session)
+            return
+        else:
+            raise e
+
+
+def t2i_insert_error(reference, error, message, db_session):
+    operation_error_schema = T2IOperationErrorSchema()
+    operation_error_data = {
+        'reference': reference,
+        'script_text': message,
+        "error": error
+    }
+    errors = operation_error_schema.validate(operation_error_data)
+    if errors:
+        raise Exception(errors)
+    operation_error = T2IOperationErrors(**operation_error_data)
+    db_session.add(operation_error)
+    db_session.commit()
+
+
+def t2i_error_processing(reference, error, message, db_session):
+    try:
+        t2i_insert_error(reference, error, message, db_session)
+    except Exception as e:
+        pass
 
 
 def set_scribt_storyboard_images(data, db_session, for_consumer=True):
-    dict_data = json.loads(data)
+    try:
+        dict_data = json.loads(data)
 
-    project_id = dict_data['reference']
-    project = Project.query.get(project_id)
-    if project:
-        images_data = dict_data['images_data']
-        storyboards = db_session.query(Storyboard).filter_by(
-            project_id=project.id).order_by(Storyboard.order).all()
-        for storyboard in storyboards:
-            storyboard.image = images_data[str(storyboard.order)]
-        db_session.commit()
-        return
-    return "error"
+        project_id = dict_data['reference']
+        project = Project.query.get(project_id)
+        if project:
+            images_data = dict_data['images_data']
+            storyboards = db_session.query(Storyboard).filter_by(
+                project_id=project.id).order_by(Storyboard.order).all()
+            for storyboard in storyboards:
+                storyboard.image = images_data[str(storyboard.order)]
+            db_session.commit()
+            return
+        return "error"
+    except Exception as e:
+        if for_consumer:
+            # insert in error table
+            t2i_error_processing(project_id, str(e.args),
+                                 str(images_data), db_session)
+            return
+        else:
+            raise e
 
 
 def t2t_consumer_bl(db_session):
