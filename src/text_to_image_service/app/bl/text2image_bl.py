@@ -57,7 +57,10 @@ def generate_image(prompt):
 
 def download_image(url):
     response = requests.get(url)
-    return BytesIO(response.content)
+    if response.status_code == 200:
+        return BytesIO(response.content)
+    else:
+        raise Exception("faild to download image")
 
 
 def create_storyboard_operation_images(images_data, reference, orginal_script, db_session):
@@ -76,12 +79,25 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
     db_session.flush()
     images_id = []
     returned_data = {}
+    media_folder = os.getenv('MEDIA_FOLDER')
+    save_data = {
+        'reference': reference,
+        'media_folder': media_folder
+    }
+
     try:
         text2image_operation_id = text2image_operation.id
+        save_data['text2image_operation_id'] = text2image_operation_id
         for image_data in images_data:
             image_url = image_data['url']
+
             image_byte = download_image(image_url)
-            url = util.save_to_db(image_byte, image_data['order'], fs_images)
+
+            save_data['order'] = image_data['order']
+            save_data['image'] = image_byte
+
+            url = util.save_image(
+                save_data, db_or_folder=1)
             images_id.append(url)
             returned_data[image_data['order']] = str(url)
             image_db_data = {
@@ -106,7 +122,7 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
         if images_id:
             # delete images from MongoDB
             for fid in images_id:
-                fs_images.delete(fid)
+                os.remove(fid)
         raise e
 
 
