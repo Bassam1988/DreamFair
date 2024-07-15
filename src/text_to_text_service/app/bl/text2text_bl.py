@@ -2,8 +2,8 @@ import json
 import ast
 from openai import OpenAI
 from .queue.rabbitmq import RabbitMQ
-from ..models.models import Text2TextOperation, Text2TextOperationStoryboard
-from ..schemas.schemas import StoryboardSchema, Text2TextOperationSchema
+from ..models.models import OperationErrors, Text2TextOperation, Text2TextOperationStoryboard
+from ..schemas.schemas import OperationErrorSchema, StoryboardSchema, Text2TextOperationSchema
 from dotenv import load_dotenv
 import os
 
@@ -55,6 +55,29 @@ def create_operation_storyboard(dict_data, response_data_message, reference, pro
     if storyboards_list:
         db_session.bulk_save_objects(storyboards_list)
     db_session.commit()
+
+
+def insert_error(reference, error, message, db_session):
+    operation_error_schema = OperationErrorSchema()
+    operation_error_data = {
+        'reference': reference,
+        'script_text': message,
+        "error": error
+    }
+
+    errors = operation_error_schema.validate(operation_error_data)
+    if errors:
+        raise Exception(errors)
+    operation_error = OperationErrors(**operation_error_data)
+    db_session.add(operation_error)
+    db_session.commit()
+
+
+def error_processing(reference, error, message, db_session):
+    try:
+        insert_error(reference, error, message, db_session)
+    except Exception as e:
+        pass
 
 
 def generate_script(data, db_session, for_consumer=False):
@@ -116,7 +139,12 @@ def generate_script(data, db_session, for_consumer=False):
             return
         return response_data
     except Exception as e:
-        return "Failed to generate script."
+        if for_consumer:
+            # insert in error table
+            error_processing(reference, str(e.args), prompt, db_session)
+            return
+        else:
+            raise e
 
 
 def set_message_storyboards(reference, dict_data):
