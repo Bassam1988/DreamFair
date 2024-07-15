@@ -150,7 +150,6 @@ def send_script(user_id, project_id):
             "orginal_script": orginal_script,
             "prompts": prompts,
             "aspect_ratio": aspect_ratio,
-            "color_description": boards_per_min,
             "storyboard_style": storyboard_style,
         }
         text_to_image_queue.send_message(
