@@ -1,5 +1,10 @@
 # schemas.py
 from marshmallow import Schema, fields
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class ScriptStyleSchema(Schema):
@@ -36,9 +41,15 @@ class BoardsPerMinSchema(Schema):
 class StoryboardProjectSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
-    image = fields.Str()
+    image = fields.Method("format_image_url")
     scene_description = fields.Str()
     project_id = fields.UUID(load_only=True)
+
+    def format_image_url(self, obj):
+        base_url = os.getenv('MEDIA_BASE_URL')
+        if obj.image and base_url:
+            return f"{base_url}{obj.image.strip('/home/ubuntu/media/')}"
+        return obj.image
 
 
 class ProjectSchema(Schema):
