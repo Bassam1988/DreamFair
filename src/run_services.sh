@@ -31,7 +31,8 @@ start_flask_service() {
     echo "Starting service in $SERVICE_DIR on port $PORT..."
     cd $SERVICE_DIR
     source env/bin/activate
-    nohup flask run --port=$PORT > flask_$PORT.log 2>&1 &
+    #nohup flask run --port=$PORT > flask_$PORT.log 2>&1 &
+    nohup python run.py > flask_$PORT.log 2>&1 &
     echo $! > flask_$PORT.pid
     deactivate
     echo "Service at $SERVICE_DIR started on port $PORT"
