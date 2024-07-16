@@ -63,6 +63,8 @@ class RabbitMQ():
                     delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
                 ),
             )
+        except Exception as e:
+            raise e
 
     def create_callback(self, process_func, db_session):
         def callback(ch, method, properties, body):

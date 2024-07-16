@@ -14,8 +14,18 @@ rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
 rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
-t_queue = os.getenv('RMQ_T2T_N_QUEUE')
-m_queue = os.getenv('RMQ_T2M_N_QUEUE')
+t_n_queue = os.getenv('RMQ_T2T_N_QUEUE')
+m_n_queue = os.getenv('RMQ_T2M_N_QUEUE')
+
+t_queue = os.getenv('RMQ_QUEUE')
+m_queue = os.getenv('RMQ_IMAGE_QUEUE')
+
+text_to_text_n_queue = RabbitMQ(
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password, queue_name=t_n_queue)
+
+text_to_image_n_queue = RabbitMQ(
+    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password, queue_name=m_n_queue)
+
 
 text_to_text_queue = RabbitMQ(
     host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password, queue_name=t_queue)
@@ -123,7 +133,7 @@ def send_synopsis(user_id, project_id):
             "video_duration": video_duration,
         }
         text_to_text_queue.send_message(
-            message=message, routing_key=os.getenv('RMQ_QUEUE'))
+            message=message, routing_key=t_queue)
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
@@ -153,7 +163,7 @@ def send_script(user_id, project_id):
             "storyboard_style": storyboard_style,
         }
         text_to_image_queue.send_message(
-            message=message, routing_key=os.getenv('RMQ_IMAGE_QUEUE'))
+            message=message, routing_key=m_queue)
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
@@ -269,9 +279,9 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
 
 def t2t_consumer_bl(db_session):
     try:
-        callback_func = text_to_text_queue.create_callback(
+        callback_func = text_to_text_n_queue.create_callback(
             set_scribt_storyboard_desc, db_session)
-        text_to_text_queue.consumer(queue=os.getenv(
+        text_to_text_n_queue.consumer(queue=os.getenv(
             'RMQ_T2T_N_QUEUE'), callback=callback_func)
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -282,9 +292,9 @@ def t2t_consumer_bl(db_session):
 
 def t2m_consumer_bl(db_session):
     try:
-        callback_func = text_to_image_queue.create_callback(
+        callback_func = text_to_image_n_queue.create_callback(
             set_scribt_storyboard_images, db_session)
-        text_to_image_queue.consumer(queue=os.getenv(
+        text_to_image_n_queue.consumer(queue=os.getenv(
             'RMQ_T2M_N_QUEUE'), callback=callback_func)
     except Exception as e:
         print(f"An error occurred: {e}")
