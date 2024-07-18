@@ -9,6 +9,8 @@ class RabbitMQ():
         self.host = host
         self.port = port
         self.queue_name = queue_name
+        self.username = user
+        self.password = password
         if self.queue_name in self.queues:
             return
         credentials = pika.PlainCredentials(user, password)
@@ -28,14 +30,17 @@ class RabbitMQ():
         host = self.host
         port = self.port
         q_name = self.queue_name
+        credentials = pika.PlainCredentials(self.user, self.password)
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=host,
                 port=port,
                 heartbeat=600,  # Heartbeat timeout in seconds
                 blocked_connection_timeout=300,
-                virtual_host='/'
+                virtual_host='/',
+                credentials=credentials
             ))
+        del self.queues[q_name]
         self.queues[q_name] = connection
 
     def send_message(self, routing_key, message):
@@ -52,6 +57,7 @@ class RabbitMQ():
             )
         # ConnectionClosed:#StreamLostError
         except pika.exceptions.ConnectionWrongStateError:
+            print("connection error")
             self.re_init_connection()
             channel = self.queues[self.queue_name].channel()
             channel.queue_declare(queue=routing_key, durable=True)
@@ -64,6 +70,7 @@ class RabbitMQ():
                 ),
             )
         except Exception as e:
+            print(str(e))
             raise e
 
     def create_callback(self, process_func, db_session):
