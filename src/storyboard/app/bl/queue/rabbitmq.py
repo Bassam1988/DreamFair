@@ -30,7 +30,7 @@ class RabbitMQ():
         host = self.host
         port = self.port
         q_name = self.queue_name
-        credentials = pika.PlainCredentials(self.user, self.password)
+        credentials = pika.PlainCredentials(self.username, self.password)
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=host,
