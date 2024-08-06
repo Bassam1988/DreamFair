@@ -1,4 +1,4 @@
-from ..bl.storyboard_bl import get_all_aspect_ratios, get_all_boards_per_mins, get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, get_project_by_id, create_project_bl, get_project_storyboard_bl, send_script, send_synopsis
+from ..bl.storyboard_bl import get_all_aspect_ratios, get_all_boards_per_mins, get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, get_project_by_id, create_project_bl, get_project_storyboard_bl, send_script, send_synopsis, update_project_bl
 from ..helper.custom_response import CustomResponse
 
 
@@ -23,6 +23,15 @@ def projects():
 @gateway_sb_blueprint.route('/get_project/<uuid:project_id>', methods=['GET'])
 def get_project(project_id):
     result = get_project_by_id(request, project_id)
+    if result['status'] == 200:
+        return CustomResponse(succeeded=True, data=result['data'], status=200)
+    else:
+        return CustomResponse(succeeded=False, message=result['message'], status=result['status'])
+
+
+@gateway_sb_blueprint.route('/update_project/<uuid:project_id>', methods=['PUT'])
+def update_project(project_id):
+    result = update_project_bl(request, project_id)
     if result['status'] == 200:
         return CustomResponse(succeeded=True, data=result['data'], status=200)
     else:

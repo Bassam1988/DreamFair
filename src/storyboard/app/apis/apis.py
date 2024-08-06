@@ -1,6 +1,6 @@
 from ..bl.storyboard_bl import create_project_bl, get_all_aspect_ratios, get_all_boards_per_mins, \
     get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, \
-    get_project_by_id, get_project_storyboard_bl, send_script, send_synopsis
+    get_project_by_id, get_project_storyboard_bl, send_script, send_synopsis, update_project_by_id
 from ..bl.auth_svc.validate import token_required_bl
 from ..helper.custom_response import CustomResponse
 
@@ -44,6 +44,17 @@ def projects(current_user):
 @token_required
 def get_project(current_user, project_id):
     result = get_project_by_id(current_user['id'], project_id)
+    if result['status'] == 200:
+        return CustomResponse(succeeded=True, data=result['data'], status=200)
+    else:
+        return CustomResponse(succeeded=False, message=result['message'], status=result['status'])
+
+
+@storyboard_blueprint.route('/update_project/<uuid:project_id>', methods=['PUT'])
+@token_required
+def update_project(current_user, project_id):
+    data = request.get_json()
+    result = update_project_by_id(current_user['id'], project_id, data)
     if result['status'] == 200:
         return CustomResponse(succeeded=True, data=result['data'], status=200)
     else:

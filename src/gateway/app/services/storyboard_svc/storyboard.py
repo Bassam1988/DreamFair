@@ -53,6 +53,21 @@ def sb_create_project(request, data):
     return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
 
 
+def sb_update_project(request, project_id, data):
+    token = request.headers.get('Authorization')
+
+    if not token:
+        raise Exception('missing credentails!')
+
+    response = requests.put(
+        f"{main_url}/storyboard/update_project/{str(project_id)}",
+        headers={"Authorization": token},
+        json=data
+    )
+    response_result = response.json()
+    return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+
+
 def get_script_styles(request):
     token = request.headers.get('Authorization')
 

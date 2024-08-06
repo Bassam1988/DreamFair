@@ -72,6 +72,19 @@ def create_project_bl(data, user_id):
     return {'data': {'project': project_schema.dump(project)}, 'safe': False, 'status': 201}
 
 
+def update_project_by_id(user_id, project_id, update_data):
+    project = Project.query.get(project_id)
+    if project and str(project.user_id) == user_id:
+        for key, value in update_data.items():
+            setattr(project, key, value)
+
+        db_session.commit()
+        project_schema = ProjectSchema()
+        data = project_schema.dump(project)
+        return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}
+
+
 def get_all_script_styles():
     script_style_schema = ScriptStyleSchema()
     script_styles = ScriptStyle.query.all()
