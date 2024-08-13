@@ -56,23 +56,29 @@ class Project(Base):
     user_id = Column(UUID(as_uuid=True), nullable=False)
     name = Column(String(150))
     synopsis = Column(String(2500))
-    script = Column(String(25000))
-    script_style_id = Column(UUID, ForeignKey('script_styles.id'))
-    script_style = relationship("ScriptStyle", back_populates="projects")
+    script = Column(String(25000), nullable=True)
+    script_style_id = Column(UUID, ForeignKey(
+        'script_styles.id'), nullable=True)
+    script_style = relationship(
+        "ScriptStyle", back_populates="projects")
     storyboard_style_id = Column(UUID, ForeignKey(
-        'storyboard_styles.id'))
+        'storyboard_styles.id'), nullable=True)
     storyboard_style = relationship(
         "StoryBoardStyle", back_populates="projects")
     video_duration_id = Column(UUID, ForeignKey(
-        'video_durations.id'))
-    video_duration = relationship("VideoDuration", back_populates="projects")
+        'video_durations.id'), nullable=True)
+    video_duration = relationship(
+        "VideoDuration", back_populates="projects")
     aspect_ratio_id = Column(UUID, ForeignKey(
-        'aspect_ratios.id'))
-    aspect_ratio = relationship("AspectRatio", back_populates="projects")
+        'aspect_ratios.id'), nullable=True)
+    aspect_ratio = relationship(
+        "AspectRatio", back_populates="projects")
     boards_per_min_id = Column(UUID, ForeignKey(
-        'boards_per_mins.id'))
-    boards_per_min = relationship("BoardsPerMin", back_populates="projects")
+        'boards_per_mins.id'), nullable=True)
+    boards_per_min = relationship(
+        "BoardsPerMin", back_populates="projects")
     storyboards = relationship("Storyboard", back_populates="project")
+    status = Column(Integer, default=1)
     created_date = Column(DateTime, default=datetime.now(timezone.utc))
 
 

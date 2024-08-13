@@ -56,9 +56,10 @@ class ProjectSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
     synopsis = fields.Str()
-    script = fields.Str()
+    script = fields.Str(required=False)
     script_style_id = fields.UUID(load_only=True)
     script_style = fields.Nested(ScriptStyleSchema, dump_only=True)
+    status = fields.Int(dump_only=True)
 
     storyboard_style_id = fields.UUID(load_only=True)
     storyboard_style = fields.Nested(StoryBoardStyleSchema, dump_only=True)

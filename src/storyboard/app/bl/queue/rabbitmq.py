@@ -11,37 +11,26 @@ class RabbitMQ():
         self.queue_name = queue_name
         self.username = user
         self.password = password
-        if self.queue_name in self.queues:
-            return
-        credentials = pika.PlainCredentials(user, password)
+        self.init_connection()
 
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=host,
-                port=port,
-                heartbeat=600,  # Heartbeat timeout in seconds
-                blocked_connection_timeout=300,
-                virtual_host='/',
-                credentials=credentials
-            ))
-        self.queues[queue_name] = connection
-
-    def re_init_connection(self):
-        host = self.host
-        port = self.port
-        q_name = self.queue_name
+    def init_connection(self):
+        """Initializes or reinitializes the connection and ensures the queue exists."""
         credentials = pika.PlainCredentials(self.username, self.password)
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host=host,
-                port=port,
+                host=self.host,
+                port=self.port,
                 heartbeat=600,  # Heartbeat timeout in seconds
                 blocked_connection_timeout=300,
                 virtual_host='/',
                 credentials=credentials
             ))
-        del self.queues[q_name]
-        self.queues[q_name] = connection
+        self.queues[self.queue_name] = connection
+        channel = self.queues[self.queue_name].channel()
+        channel.queue_declare(queue=self.queue_name, durable=True)
+
+    def re_init_connection(self):
+        self.init_connection()
 
     def send_message(self, routing_key, message):
         try:
@@ -59,16 +48,7 @@ class RabbitMQ():
         except pika.exceptions.ConnectionWrongStateError:
             print("connection error")
             self.re_init_connection()
-            channel = self.queues[self.queue_name].channel()
-            channel.queue_declare(queue=routing_key, durable=True)
-            channel.basic_publish(
-                exchange="",
-                routing_key=routing_key,
-                body=json.dumps(message),
-                properties=pika.BasicProperties(
-                    delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
-                ),
-            )
+            self.send_message(routing_key, message)
         except Exception as e:
             print(str(e))
             raise e

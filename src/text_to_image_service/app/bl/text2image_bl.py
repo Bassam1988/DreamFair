@@ -23,9 +23,16 @@ rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
 rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
+rabbitmq_queue_name = os.getenv('RMQ_QUEUE', 'text2image')
+rabbitmq_n_queue_name = os.getenv(
+    'RMQ_storyboard_QUEUE', 'text2image_notification')
 
-text_to_image_queue = RabbitMQ(
-    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
+text_to_image_queue = RabbitMQ(host=rabbitmq_host, port=rabbitmq_port,
+                               user=rabbitmq_user, password=rabbitmq_password, queue_name=rabbitmq_queue_name)
+
+text_to_image_n_queue = RabbitMQ(host=rabbitmq_host, port=rabbitmq_port,
+                                 user=rabbitmq_user, password=rabbitmq_password, queue_name=rabbitmq_n_queue_name)
+
 
 # mongo_image = PyMongo(
 #     current_app,
@@ -208,8 +215,8 @@ def error_processing(reference, error, message, db_session):
 def set_message_storyboards_images(reference, dict_data):
     message = {'reference': reference,
                'images_data': dict_data}
-    text_to_image_queue.send_message(routing_key=os.getenv(
-        'RMQ_storyboard_QUEUE'), message=message)
+    text_to_image_n_queue.send_message(
+        routing_key=rabbitmq_n_queue_name, message=message)
 
 
 def get_images_id(ref_id, db_session):
@@ -236,8 +243,8 @@ def consumer_bl(db_session):
     try:
         callback_func = text_to_image_queue.create_callback(
             generate_storyboards, db_session)
-        text_to_image_queue.consumer(queue=os.getenv(
-            'RMQ_QUEUE'), callback=callback_func)
+        text_to_image_queue.consumer(
+            queue=rabbitmq_queue_name, callback=callback_func)
     except Exception as e:
         print(f"An error occurred: {e}")
         db_session.rollback()

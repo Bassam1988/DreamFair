@@ -59,12 +59,12 @@ def create_project_bl(data, user_id):
         user_id=user_id,
         name=data['name'],
         synopsis=data['synopsis'],
-        script=data['script'],
-        script_style_id=data['script_style_id'],
-        storyboard_style_id=data['storyboard_style_id'],
-        video_duration_id=data['video_duration_id'],
-        aspect_ratio_id=data['aspect_ratio_id'],
-        boards_per_min_id=data['boards_per_min_id']
+        script=data.get('script', None),
+        script_style_id=data.get('script_style_id', None),
+        storyboard_style_id=data.get('storyboard_style_id', None),
+        video_duration_id=data.get('video_duration_id', None),
+        aspect_ratio_id=data.get('aspect_ratio_id', None),
+        boards_per_min_id=data.get('boards_per_min_id', None)
     )
 
     db_session.add(project)
@@ -137,16 +137,27 @@ def send_synopsis(user_id, project_id):
     if project and str(project.user_id) == user_id:
         synopsis = project.synopsis
         reference = str(project.id)
-        script_style = project.script_style.name
-        video_duration = project.video_duration.name
+        script_style = project.script_style
+        if script_style:
+            script_style_name = script_style.name
+        else:
+            return {'message': 'Script Style is mandatory', 'status': 400}
+
+        video_duration = project.video_duration
+        if video_duration:
+            video_duration_name = video_duration.name
+        else:
+            return {'message': 'Video duration is mandatory', 'status': 400}
         message = {
             "reference": reference,
             "synopsis": synopsis,
-            "script_style": script_style,
-            "video_duration": video_duration,
+            "script_style": script_style_name,
+            "video_duration": video_duration_name,
         }
         text_to_text_queue.send_message(
             message=message, routing_key=t_queue)
+        project.status = 2
+        db_session.commit()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
@@ -164,19 +175,35 @@ def send_script(user_id, project_id):
         prompts = {prompt.order: prompt.scene_description
                    for prompt in project.storyboards}
 
-        aspect_ratio = project.aspect_ratio.name
-        boards_per_min = project.boards_per_min.count
-        storyboard_style = project.storyboard_style.name
+        aspect_ratio = project.aspect_ratio
+        if aspect_ratio:
+            aspect_ratio_name = aspect_ratio.name
+        else:
+            return {'message': 'Aspect ratio is mandatory', 'status': 400}
+
+        boards_per_min = project.boards_per_min
+        if boards_per_min:
+            boards_per_min_count = boards_per_min.count
+        else:
+            return {'message': 'Boards per min is mandatory', 'status': 400}
+
+        storyboard_style = project.storyboard_style
+        if storyboard_style:
+            storyboard_style_name = storyboard_style.name
+        else:
+            return {'message': 'Storyboard tyle is mandatory', 'status': 400}
 
         message = {
             "reference": reference,
             "orginal_script": orginal_script,
             "prompts": prompts,
-            "aspect_ratio": aspect_ratio,
-            "storyboard_style": storyboard_style,
+            "aspect_ratio": aspect_ratio_name,
+            "storyboard_style": storyboard_style_name,
         }
         text_to_image_queue.send_message(
             message=message, routing_key=m_queue)
+        project.status = 3
+        db_session.commit()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}

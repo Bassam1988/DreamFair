@@ -5,34 +5,53 @@ import json
 class RabbitMQ():
     queues = {}
 
-    def __init__(self, host, port, user, password) -> None:
+    def __init__(self, host, port, user, password, queue_name) -> None:
         self.host = host
         self.port = port
-        if self.host in self.queues:
-            return
-        credentials = pika.PlainCredentials(user, password)
+        self.queue_name = queue_name
+        self.username = user
+        self.password = password
+        self.init_connection()
 
+    def init_connection(self):
+        """Initializes or reinitializes the connection and ensures the queue exists."""
+        credentials = pika.PlainCredentials(self.username, self.password)
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host=host,
-                port=port,
+                host=self.host,
+                port=self.port,
                 heartbeat=600,  # Heartbeat timeout in seconds
                 blocked_connection_timeout=300,
                 virtual_host='/',
                 credentials=credentials
             ))
-        self.queues[host] = connection
+        self.queues[self.queue_name] = connection
+        channel = self.queues[self.queue_name].channel()
+        channel.queue_declare(queue=self.queue_name, durable=True)
+
+    def re_init_connection(self):
+        self.init_connection()
 
     def send_message(self, routing_key, message):
-        channel = self.queues[self.host].channel()
-        channel.basic_publish(
-            exchange="",
-            routing_key=routing_key,
-            body=json.dumps(message),
-            properties=pika.BasicProperties(
-                delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
-            ),
-        )
+        try:
+            channel = self.queues[self.queue_name].channel()
+            channel.queue_declare(queue=routing_key, durable=True)
+            channel.basic_publish(
+                exchange="",
+                routing_key=routing_key,
+                body=json.dumps(message),
+                properties=pika.BasicProperties(
+                    delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
+                ),
+            )
+        # ConnectionClosed:#StreamLostError
+        except pika.exceptions.ConnectionWrongStateError:
+            print("connection error")
+            self.re_init_connection()
+            self.send_message(routing_key, message)
+        except Exception as e:
+            print(str(e))
+            raise e
 
     def create_callback(self, process_func, db_session):
         def callback(ch, method, properties, body):
@@ -44,7 +63,7 @@ class RabbitMQ():
         return callback
 
     def consumer(self, queue, callback):
-        channel = self.queues[self.host].channel()
+        channel = self.queues[self.queue_name].channel()
         channel.basic_consume(
             queue=queue, on_message_callback=callback
         )

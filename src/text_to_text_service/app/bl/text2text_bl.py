@@ -13,9 +13,15 @@ rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
 rabbitmq_port = int(os.getenv('RABBITMQ_PORT', 5672))
 rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
 rabbitmq_password = os.getenv('RABBITMQ_PASS', 'guest')
+rabbitmq_queue_name = os.getenv('RMQ_QUEUE', 'tex2text')
+rabbitmq_n_queue_name = os.getenv(
+    'RMQ_storyboard_QUEUE', 'text2text_notification')
 
-text_to_text_queue = RabbitMQ(
-    host=rabbitmq_host, port=rabbitmq_port, user=rabbitmq_user, password=rabbitmq_password)
+text_to_text_queue = RabbitMQ(host=rabbitmq_host, port=rabbitmq_port,
+                              user=rabbitmq_user, password=rabbitmq_password, queue_name=rabbitmq_queue_name)
+
+text_to_text_n_queue = RabbitMQ(host=rabbitmq_host, port=rabbitmq_port,
+                                user=rabbitmq_user, password=rabbitmq_password, queue_name=rabbitmq_n_queue_name)
 
 
 def create_operation_storyboard(dict_data, response_data_message, reference, prompt, db_session):
@@ -149,16 +155,16 @@ def generate_script(data, db_session, for_consumer=False):
 
 def set_message_storyboards(reference, dict_data):
     dict_data['reference'] = reference
-    text_to_text_queue.send_message(routing_key=os.getenv(
-        'RMQ_storyboard_QUEUE'), message=dict_data)
+    text_to_text_n_queue.send_message(
+        routing_key=rabbitmq_n_queue_name, message=dict_data)
 
 
 def consumer_bl(db_session):
     try:
         callback_func = text_to_text_queue.create_callback(
             generate_script, db_session)
-        text_to_text_queue.consumer(queue=os.getenv(
-            'RMQ_QUEUE'), callback=callback_func)
+        text_to_text_queue.consumer(
+            queue=rabbitmq_queue_name, callback=callback_func)
     except Exception as e:
         print(f"An error occurred: {e}")
         db_session.rollback()
