@@ -77,9 +77,9 @@ class ProjectSchema(Schema):
         StoryboardProjectSchema, many=True, dump_only=True)  # type: ignore
 
 
-class StoryboardProjectSchema(Schema):
-    id = fields.UUID(dump_only=True)
-    name = fields.Str(required=True)
+# class StoryboardProjectSchema(Schema):
+#     id = fields.UUID(dump_only=True)
+#     name = fields.Str(required=True)
 
 
 class StoryboardSchema(Schema):
