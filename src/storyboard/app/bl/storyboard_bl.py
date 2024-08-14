@@ -45,6 +45,9 @@ def get_project_by_id(user_id, project_id):
     project_schema = ProjectSchema()
     project = Project.query.get(project_id)
     if project and str(project.user_id) == user_id:
+        project.storyboards = db_session.query(Storyboard).filter(
+            Storyboard.project_id == project.id
+        ).order_by(Storyboard.order).all()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
