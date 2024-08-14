@@ -48,7 +48,7 @@ class StoryboardProjectSchema(Schema):
     def format_image_url(self, obj):
         base_url = os.getenv('MEDIA_BASE_URL')
         if obj.image and base_url:
-            return f"{base_url}{obj.image.strip('/home/ubuntu/media/')}"
+            return f"{base_url}{obj.image.replace('/home/ubuntu/media/', '')}"
         return obj.image
 
 
