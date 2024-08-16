@@ -36,7 +36,7 @@ def register():
     if result['status'] in (200, 201):
         return CustomResponse(succeeded=True, data=result['data'], status=result['status'], safe=result['safe'])
     else:
-        return CustomResponse(succeeded=False, message=result['errors'], status=result['status'])
+        return CustomResponse(succeeded=False, message=result['message'], status=result['status'])
 
 
 @auth_blueprint.route('/login', methods=['POST'])

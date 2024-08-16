@@ -12,7 +12,7 @@ def register_bl(data):
     user_schema = UserSchema()
     errors = user_schema.validate(data)
     if errors:
-        return {'errors': errors, 'status': 400}
+        return {'message': errors, 'status': 400}
     user = User(username=data['username'], email=data['email'])
     user.set_password(data['password'])
     if 'role_ids' in data:
@@ -24,8 +24,7 @@ def register_bl(data):
         user.roles = roles
     existed_user = db_session.query(User).filter(
         or_(User.email == data['email'], User.username == data['username'])
-
-    )
+    ).all()
     if existed_user:
         return {'message': 'the username or email exists, please choose another', 'status': 400}
     db_session.add(user)
