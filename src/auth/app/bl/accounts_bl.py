@@ -5,6 +5,7 @@ from ..models.models import Role, User
 from ..schemas.schemas import UserSchema
 from ..database import db_session
 from flask import current_app
+from sqlalchemy import and_, or_
 
 
 def register_bl(data):
@@ -21,7 +22,12 @@ def register_bl(data):
         if not roles:
             return {'message': 'One or more roles are invalid', 'status': 400}
         user.roles = roles
+    existed_user = db_session.query(User).filter(
+        or_(User.email == data['email'], User.username == data['username'])
 
+    )
+    if existed_user:
+        return {'message': 'the username or email exists, please choose another', 'status': 400}
     db_session.add(user)
     db_session.commit()
     return {'data': {'user': user_schema.dump(user)}, 'safe': False, 'status': 201}
