@@ -48,6 +48,14 @@ class BoardsPerMin(Base):
     projects = relationship("Project", back_populates="boards_per_min")
 
 
+class Status(Base):
+    __tablename__ = 'status'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(50), unique=True)
+    code_name = Column(String(20), unique=True)
+    projects = relationship("Project", back_populates="status")
+
+
 class Project(Base):
     __tablename__ = 'projects'
 
@@ -57,6 +65,10 @@ class Project(Base):
     name = Column(String(150))
     synopsis = Column(String(2500))
     script = Column(String(25000), nullable=True)
+    status_id = Column(UUID, ForeignKey(
+        'status.id'), nullable=True)
+    status = relationship(
+        "Status", back_populates="projects")
     script_style_id = Column(UUID, ForeignKey(
         'script_styles.id'), nullable=True)
     script_style = relationship(
@@ -78,7 +90,6 @@ class Project(Base):
     boards_per_min = relationship(
         "BoardsPerMin", back_populates="projects")
     storyboards = relationship("Storyboard", back_populates="project")
-    status = Column(Integer, default=1)
     created_date = Column(DateTime, default=datetime.now(timezone.utc))
 
 

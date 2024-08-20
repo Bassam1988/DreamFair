@@ -1,7 +1,7 @@
 import json
 from ..database import db_session
 from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, T2IOperationErrorSchema, T2TOperationErrorSchema, VideoDurationSchema
-from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, StoryBoardStyle, Storyboard, T2IOperationErrors, T2TOperationErrors, VideoDuration
+from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, Status, StoryBoardStyle, Storyboard, T2IOperationErrors, T2TOperationErrors, VideoDuration
 from .queue.rabbitmq import RabbitMQ
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
@@ -63,6 +63,7 @@ def create_project_bl(data, user_id):
         name=data['name'],
         synopsis=data['synopsis'],
         script=data.get('script', None),
+        status=Status.query.filter(Status.code_name == 'Wa').first(),
         script_style_id=data.get('script_style_id', None),
         storyboard_style_id=data.get('storyboard_style_id', None),
         video_duration_id=data.get('video_duration_id', None),
@@ -159,7 +160,8 @@ def send_synopsis(user_id, project_id):
         }
         text_to_text_queue.send_message(
             message=message, routing_key=t_queue)
-        project.status = 2
+        project.status = Status.query.filter(
+            Status.code_name == 'GeSc').first()
         db_session.commit()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
@@ -205,7 +207,8 @@ def send_script(user_id, project_id):
         }
         text_to_image_queue.send_message(
             message=message, routing_key=m_queue)
-        project.status = 3
+        project.status = Status.query.filter(
+            Status.code_name == 'GeSt').first()
         db_session.commit()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
@@ -260,6 +263,8 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
 
             if storyboards_list:
                 db_session.bulk_save_objects(storyboards_list)
+            project.status = Status.query.filter(
+                Status.code_name == 'GedSc').first()
             db_session.commit()
             return
         return "error"
@@ -307,6 +312,9 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
                 project_id=project.id).order_by(Storyboard.order).all()
             for storyboard in storyboards:
                 storyboard.image = images_data[str(storyboard.order)]
+
+            project.status = Status.query.filter(
+                Status.code_name == 'GedSt').first()
             db_session.commit()
             return
         return "error"

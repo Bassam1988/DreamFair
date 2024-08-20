@@ -52,6 +52,12 @@ class StoryboardProjectSchema(Schema):
         return obj.image
 
 
+class StatusSchema(Schema):
+    id = fields.UUID(dump_only=True)
+    name = fields.Str()
+    code_name = fields.Str()
+
+
 class ProjectSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
@@ -59,7 +65,7 @@ class ProjectSchema(Schema):
     script = fields.Str(required=False)
     script_style_id = fields.UUID(load_only=True)
     script_style = fields.Nested(ScriptStyleSchema, dump_only=True)
-    status = fields.Int(dump_only=True)
+    status = fields.Nested(StatusSchema, dump_only=True)
 
     storyboard_style_id = fields.UUID(load_only=True)
     storyboard_style = fields.Nested(StoryBoardStyleSchema, dump_only=True)
