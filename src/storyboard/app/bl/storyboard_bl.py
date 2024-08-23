@@ -243,6 +243,8 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
         storyboards_list = []
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
+        db_session.query(Storyboard).filter(
+            Storyboard.project_id == project.id).delete()
         if project:
             storyboards = dict_data['storyboards']
             project_script = dict_data['script']

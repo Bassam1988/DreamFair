@@ -165,7 +165,7 @@ def generate_storyboards(data, db_session, for_consumer=False):
         #     "return me list of urls in the same images' order"
 
         for key, value in prompts.items():
-            prompt = f" Create a storyboard with aspect ratio: {aspect_ratio} in the style of {storyboard_style} based on this storyboard description:{value}.\n"\
+            prompt = f" Create image with aspect ratio: {aspect_ratio} for scene as storyboard in the style of {storyboard_style} based on this description:{value}.\n"\
                 " and the total script of all scenes\n"\
                 f"the total script: {orginal_script} \n"
 
