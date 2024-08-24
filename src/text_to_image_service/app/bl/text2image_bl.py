@@ -174,7 +174,7 @@ def generate_storyboards(data, db_session, for_consumer=False):
                 " and take the total script of all scenes in considration to keep same context\n"\
                 f"the total script: {orginal_script} \n"
 
-            image_url = generate_image(prompt)
+            image_url = generate_image(prompt, aspect_ratio)
             image_data = {'order': key, 'prompt': prompt, 'url': image_url}
 
             images_data.append(image_data)
