@@ -47,15 +47,21 @@ mongo_client = MongoDBClient(uri, db_name)
 fs_images = mongo_client.fs_db
 
 
-def generate_image(prompt):
+def generate_image(prompt, aspect_ratio):
+    size = "1024x1024"
+    if aspect_ratio == '16:9':
+        size = "1792x1024"
+    elif aspect_ratio == '9:16':
+        size = "1024x1792"
+
     openai_key = os.getenv('OPENAI_SECRET_KEY')
     client = OpenAI(api_key=openai_key)
 
     response = client.images.generate(
         model="dall-e-3",
         quality="standard",
-        prompt=prompt
-
+        prompt=prompt,
+        size=size
     )
 
     return response.data[0].url
