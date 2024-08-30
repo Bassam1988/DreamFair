@@ -243,32 +243,40 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
         storyboards_list = []
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
-        db_session.query(Storyboard).filter(
-            Storyboard.project_id == project.id).delete()
+        success = dict_data['success']
         if project:
-            storyboards = dict_data['storyboards']
-            project_script = dict_data['script']
-            project.script = project_script
-            for key, value in storyboards.items():
-                storyboard_data = {
-                    'project_id': project.id,
-                    'order': key,
-                    'scene_description': value,
-                    'name': key
-                }
-                storyboard_schema = StoryboardSchema()
-                errors = storyboard_schema.validate(storyboard_data)
-                if errors:
-                    raise Exception(errors)
-                storyboard = Storyboard(**storyboard_data)
-                storyboards_list.append(storyboard)
+            if success == 1:
+                db_session.query(Storyboard).filter(
+                    Storyboard.project_id == project.id).delete()
+                storyboards = dict_data['storyboards']
+                project_script = dict_data['script']
+                project.script = project_script
+                for key, value in storyboards.items():
+                    storyboard_data = {
+                        'project_id': project.id,
+                        'order': key,
+                        'scene_description': value,
+                        'name': key
+                    }
+                    storyboard_schema = StoryboardSchema()
+                    errors = storyboard_schema.validate(storyboard_data)
+                    if errors:
+                        raise Exception(errors)
+                    storyboard = Storyboard(**storyboard_data)
+                    storyboards_list.append(storyboard)
 
-            if storyboards_list:
-                db_session.bulk_save_objects(storyboards_list)
-            project.status = Status.query.filter(
-                Status.code_name == 'GedSc').first()
-            db_session.commit()
-            return
+                if storyboards_list:
+                    db_session.bulk_save_objects(storyboards_list)
+                project.status = Status.query.filter(
+                    Status.code_name == 'GedSc').first()
+                db_session.commit()
+                return
+            else:
+                project.status = Status.query.filter(
+                    Status.code_name == 'Wa').first()
+                db_session.commit()
+                error = dict_data['e_message']
+                return error
         return "error"
     except Exception as e:
         if for_consumer:
@@ -308,17 +316,26 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
 
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
+        success = dict_data['success']
         if project:
-            images_data = dict_data['images_data']
-            storyboards = db_session.query(Storyboard).filter_by(
-                project_id=project.id).order_by(Storyboard.order).all()
-            for storyboard in storyboards:
-                storyboard.image = images_data[str(storyboard.order)]
+            if success == 1:
 
-            project.status = Status.query.filter(
-                Status.code_name == 'GedSt').first()
-            db_session.commit()
-            return
+                images_data = dict_data['images_data']
+                storyboards = db_session.query(Storyboard).filter_by(
+                    project_id=project.id).order_by(Storyboard.order).all()
+                for storyboard in storyboards:
+                    storyboard.image = images_data[str(storyboard.order)]
+
+                project.status = Status.query.filter(
+                    Status.code_name == 'GedSt').first()
+                db_session.commit()
+                return
+            else:
+                project.status = Status.query.filter(
+                    Status.code_name == 'GedSc').first()
+                db_session.commit()
+                error = dict_data['e_message']
+                return error
         return "error"
     except Exception as e:
         if for_consumer:

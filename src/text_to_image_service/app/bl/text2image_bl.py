@@ -213,13 +213,18 @@ def insert_error(reference, error, message, db_session):
 def error_processing(reference, error, message, db_session):
     try:
         insert_error(reference, error, message, db_session)
+        set_message_storyboards_images(
+            reference, dict_data=None, success=0, e_message=error)
     except Exception as e:
         pass
 
 
-def set_message_storyboards_images(reference, dict_data):
-    message = {'reference': reference,
-               'images_data': dict_data}
+def set_message_storyboards_images(reference, dict_data=None, success=1, e_message=None):
+    message = {
+        'success': success,
+        'e_message': e_message,
+        'reference': reference,
+        'images_data': dict_data}
     text_to_image_n_queue.send_message(
         routing_key=rabbitmq_n_queue_name, message=message)
 

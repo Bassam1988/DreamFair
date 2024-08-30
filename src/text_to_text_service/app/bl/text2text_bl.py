@@ -82,6 +82,8 @@ def insert_error(reference, error, message, db_session):
 def error_processing(reference, error, message, db_session):
     try:
         insert_error(reference, error, message, db_session)
+        set_message_storyboards(
+            reference, dict_data=None, success=0, error=error)
     except Exception as e:
         pass
 
@@ -153,8 +155,10 @@ def generate_script(data, db_session, for_consumer=False):
             raise e
 
 
-def set_message_storyboards(reference, dict_data):
+def set_message_storyboards(reference, dict_data=None, success=1, error=None):
     dict_data['reference'] = reference
+    dict_data['success'] = success
+    dict_data['e_message'] = error
     text_to_text_n_queue.send_message(
         routing_key=rabbitmq_n_queue_name, message=dict_data)
 
