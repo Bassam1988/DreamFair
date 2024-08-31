@@ -281,7 +281,7 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
     except Exception as e:
         if for_consumer:
             # insert in error table
-            t2t_error_processing(project_id, str(e.args),
+            t2t_error_processing(project_id, str(e),
                                  project_script, db_session)
             return
         else:
@@ -340,7 +340,7 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
     except Exception as e:
         if for_consumer:
             # insert in error table
-            t2i_error_processing(project_id, str(e.args),
+            t2i_error_processing(project_id, str(e),
                                  str(images_data), db_session)
             return
         else:
