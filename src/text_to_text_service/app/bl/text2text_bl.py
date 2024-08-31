@@ -120,32 +120,51 @@ def generate_script(data, db_session, for_consumer=False):
         "don't add \n out side the generated text, the result should be exactly like this"\
         "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"generated storyboard 1\",\"2\":\"generated storyboard 2\", ...}}' "
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a senior scripts writer and artist."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        response_data_message = str(
-            response.choices[0].message.content)
-        dict_data = None
-        try:
-            dict_data = ast.literal_eval(response_data_message)
-        except:
+        retry = 0
+        error = None
+        while retry < 4:
             try:
-                dict_data = json.loads(response_data_message)
+                error = None
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system",
+                            "content": "You are a senior scripts writer and artist."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                response_data_message = str(
+                    response.choices[0].message.content)
+                break
             except Exception as e:
-                raise e
+                error = e
+                retry = +1
+        if retry < 4:
+            dict_data = None
+            try:
+                dict_data = ast.literal_eval(response_data_message)
+            except:
+                try:
+                    dict_data = json.loads(response_data_message)
+                except Exception as e:
+                    raise e
 
-        create_operation_storyboard(
-            dict_data, response_data_message, reference, prompt, db_session)
-        response_data = {'data': dict_data}
-        if for_consumer:
-            # insert result in text2text_notification queue to get it to storyboard app
-            set_message_storyboards(reference=reference, dict_data=dict_data)
-            return
-        return response_data
+            create_operation_storyboard(
+                dict_data, response_data_message, reference, prompt, db_session)
+            response_data = {'data': dict_data}
+            if for_consumer:
+                # insert result in text2text_notification queue to get it to storyboard app
+                set_message_storyboards(
+                    reference=reference, dict_data=dict_data)
+                return
+            return response_data
+        else:
+            if for_consumer:
+                # insert in error table
+                error_processing(reference, str(e.args), prompt, db_session)
+                return
+            else:
+                raise e
     except Exception as e:
         if for_consumer:
             # insert in error table

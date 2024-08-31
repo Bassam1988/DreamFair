@@ -56,15 +56,22 @@ def generate_image(prompt, aspect_ratio):
 
     openai_key = os.getenv('OPENAI_SECRET_KEY')
     client = OpenAI(api_key=openai_key)
+    retry = 0
+    error = None
+    while retry < 4:
+        try:
+            response = client.images.generate(
+                model="dall-e-3",
+                quality="standard",
+                prompt=prompt,
+                size=size
+            )
+            return response.data[0].url
+        except Exception as e:
+            error = e
+            retry = +1
 
-    response = client.images.generate(
-        model="dall-e-3",
-        quality="standard",
-        prompt=prompt,
-        size=size
-    )
-
-    return response.data[0].url
+    return str(error)
 
 
 def download_image(url):
