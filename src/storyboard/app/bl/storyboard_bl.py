@@ -244,12 +244,13 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
         success = dict_data['success']
+        project_script = dict_data.get('script', None)
         if project:
             if success == 1:
                 db_session.query(Storyboard).filter(
                     Storyboard.project_id == project.id).delete()
                 storyboards = dict_data['storyboards']
-                project_script = dict_data['script']
+
                 project.script = project_script
                 for key, value in storyboards.items():
                     storyboard_data = {
@@ -317,10 +318,10 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
         success = dict_data['success']
+        images_data = dict_data.get('images_data', None)
         if project:
             if success == 1:
 
-                images_data = dict_data['images_data']
                 storyboards = db_session.query(Storyboard).filter_by(
                     project_id=project.id).order_by(Storyboard.order).all()
                 for storyboard in storyboards:
