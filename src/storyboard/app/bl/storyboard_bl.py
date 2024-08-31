@@ -276,7 +276,7 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
                     Status.code_name == 'Wa').first()
                 db_session.commit()
                 error = dict_data['e_message']
-                return error
+                raise error
         return "error"
     except Exception as e:
         if for_consumer:
@@ -335,7 +335,7 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
                     Status.code_name == 'GedSc').first()
                 db_session.commit()
                 error = dict_data['e_message']
-                return error
+                raise error
         return "error"
     except Exception as e:
         if for_consumer:

@@ -221,7 +221,7 @@ def error_processing(reference, error, message, db_session):
     try:
         insert_error(reference, error, message, db_session)
         set_message_storyboards_images(
-            reference, dict_data=None, success=0, e_message=error)
+            reference, success=0, e_message=error)
     except Exception as e:
         pass
 

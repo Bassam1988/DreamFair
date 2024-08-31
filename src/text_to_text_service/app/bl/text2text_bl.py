@@ -82,8 +82,9 @@ def insert_error(reference, error, message, db_session):
 def error_processing(reference, error, message, db_session):
     try:
         insert_error(reference, error, message, db_session)
+        dict_data = dict()
         set_message_storyboards(
-            reference, dict_data=None, success=0, error=error)
+            reference, dict_data, success=0, error=error)
     except Exception as e:
         pass
 
