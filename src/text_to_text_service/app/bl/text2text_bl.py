@@ -68,7 +68,7 @@ def insert_error(reference, error, message, db_session):
     operation_error_data = {
         'reference': reference,
         'script_text': message,
-        "error": error
+        "error": str(error)
     }
 
     errors = operation_error_schema.validate(operation_error_data)
@@ -84,7 +84,7 @@ def error_processing(reference, error, message, db_session):
         insert_error(reference, error, message, db_session)
         dict_data = dict()
         set_message_storyboards(
-            reference, dict_data, success=0, error=error)
+            reference, dict_data, success=0, error=str(error))
     except Exception as e:
         pass
 
@@ -139,7 +139,7 @@ def generate_script(data, db_session, for_consumer=False):
                 break
             except Exception as e:
                 error = e
-                retry = +1
+                retry += 1
         if retry < 4:
             dict_data = None
             try:
@@ -162,10 +162,10 @@ def generate_script(data, db_session, for_consumer=False):
         else:
             if for_consumer:
                 # insert in error table
-                error_processing(reference, str(e.args), prompt, db_session)
+                error_processing(reference, error, prompt, db_session)
                 return
             else:
-                raise e
+                raise error
     except Exception as e:
         if for_consumer:
             # insert in error table

@@ -69,7 +69,7 @@ def generate_image(prompt, aspect_ratio):
             return response.data[0].url
         except Exception as e:
             error = e
-            retry = +1
+            retry += 1
 
     return str(error)
 
