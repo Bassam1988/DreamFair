@@ -63,7 +63,7 @@ class Project(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     name = Column(String(150))
-    synopsis = Column(String(2500))
+    synopsis = Column(String(2500), nullable=True)
     script = Column(String(25000), nullable=True)
     status_id = Column(UUID, ForeignKey(
         'status.id'), nullable=True)

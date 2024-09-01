@@ -61,7 +61,7 @@ def create_project_bl(data, user_id):
     project = Project(
         user_id=user_id,
         name=data['name'],
-        synopsis=data['synopsis'],
+        synopsis=data.get('synopsis', None),
         script=data.get('script', None),
         status=Status.query.filter(Status.code_name == 'Wa').first(),
         script_style_id=data.get('script_style_id', None),

@@ -61,7 +61,7 @@ class StatusSchema(Schema):
 class ProjectSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
-    synopsis = fields.Str()
+    synopsis = fields.Str(required=False)
     script = fields.Str(required=False)
     script_style_id = fields.UUID(load_only=True)
     script_style = fields.Nested(ScriptStyleSchema, dump_only=True)
