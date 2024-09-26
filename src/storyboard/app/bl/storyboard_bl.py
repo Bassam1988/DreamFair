@@ -135,10 +135,20 @@ def get_project_storyboard_bl(user_id, project_id):
     return {'message': 'No data found', 'status': 404}
 
 
-def send_synopsis(user_id, project_id):
-    project_schema = ProjectSchema()
+def generate_storyboard_description(user_id, project_id, source):
+    
     project = Project.query.get(project_id)
     if project and str(project.user_id) == user_id:
+        if source==1:
+            return generate_storyboards_by_synopsis(project)
+        if source==2:
+            generate_storyboards_by_script(project)
+    return {'message': 'No data found', 'status': 404}
+
+        
+
+def generate_storyboards_by_synopsis(project):
+        project_schema = ProjectSchema()
         synopsis = project.synopsis
         reference = str(project.id)
         script_style = project.script_style
@@ -157,6 +167,7 @@ def send_synopsis(user_id, project_id):
             "synopsis": synopsis,
             "script_style": script_style_name,
             "video_duration": video_duration_name,
+            "source":1
         }
         text_to_text_queue.send_message(
             message=message, routing_key=t_queue)
@@ -165,7 +176,39 @@ def send_synopsis(user_id, project_id):
         db_session.commit()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
-    return {'message': 'No data found', 'status': 404}
+    
+
+
+def generate_storyboards_by_script(project):
+        project_schema = ProjectSchema()    
+        script = project.script
+        reference = str(project.id)
+        script_style = project.script_style
+        if script_style:
+            script_style_name = script_style.name
+        else:
+            return {'message': 'Script Style is mandatory', 'status': 400}
+
+        video_duration = project.video_duration
+        if video_duration:
+            video_duration_name = video_duration.name
+        else:
+            return {'message': 'Video duration is mandatory', 'status': 400}
+        message = {
+            "reference": reference,
+            "script": script,
+            "script_style": script_style_name,
+            "video_duration": video_duration_name,
+            "source":2
+        }
+        text_to_text_queue.send_message(
+            message=message, routing_key=t_queue)
+        project.status = Status.query.filter(
+            Status.code_name == 'GeSc').first()
+        db_session.commit()
+        data = project_schema.dump(project)
+        return {'data': data, 'status': 200}
+    
 
 
 def send_script(user_id, project_id):
@@ -238,8 +281,17 @@ def t2t_error_processing(reference, error, message, db_session):
 
 
 def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
+    dict_data = json.loads(data)
+    source=dict_data['source']
+    if source==1:
+        set_scribt_and_storyboard_desc(dict_data,db_session,for_consumer)
+    if source==2:
+         set_storyboard_desc(dict_data, db_session, for_consumer=True)
+    
+
+def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
     try:
-        dict_data = json.loads(data)
+        
         storyboards_list = []
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
@@ -277,7 +329,7 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
                     Status.code_name == 'Wa').first()
                 db_session.commit()
                 error = dict_data['e_message']
-                raise error
+                raise Exception(error)
         return "error"
     except Exception as e:
         if for_consumer:
@@ -287,6 +339,59 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
             return
         else:
             raise e
+        
+
+def set_storyboard_desc(dict_data, db_session, for_consumer=True):
+    try:
+        
+        storyboards_list = []
+        project_id = dict_data['reference']
+        project = Project.query.get(project_id)
+        success = dict_data['success']
+        #project_script = dict_data.get('script', None)
+        if project:
+            if success == 1:
+                db_session.query(Storyboard).filter(
+                    Storyboard.project_id == project.id).delete()
+                storyboards = dict_data['storyboards']
+
+                #project.script = project_script
+                for key, value in storyboards.items():
+                    storyboard_data = {
+                        'project_id': project.id,
+                        'order': key,
+                        'scene_description': value,
+                        'name': key
+                    }
+                    storyboard_schema = StoryboardSchema()
+                    errors = storyboard_schema.validate(storyboard_data)
+                    if errors:
+                        raise Exception(errors)
+                    storyboard = Storyboard(**storyboard_data)
+                    storyboards_list.append(storyboard)
+
+                if storyboards_list:
+                    db_session.bulk_save_objects(storyboards_list)
+                project.status = Status.query.filter(
+                    Status.code_name == 'GedSc').first()
+                db_session.commit()
+                return
+            else:
+                project.status = Status.query.filter(
+                    Status.code_name == 'Wa').first()
+                db_session.commit()
+                error = dict_data['e_message']
+                raise Exception(error)
+        return "error"
+    except Exception as e:
+        if for_consumer:
+            # insert in error table
+            t2t_error_processing(project_id, str(e),
+                                 str(storyboards), db_session)
+            return
+        else:
+            raise e
+
 
 
 def t2i_insert_error(reference, error, message, db_session):

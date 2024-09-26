@@ -152,14 +152,14 @@ def get_project_storyboard(request, project_id):
     return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
 
 
-def send_synopsis_request(request, project_id):
+def send_synopsis_request(request, project_id, source):
     token = request.headers.get('Authorization')
 
     if not token:
         raise Exception('missing credentails!')
 
     response = requests.post(
-        f"{main_url}/storyboard/get_script/{project_id}",
+        f"{main_url}/storyboard/get_script/{project_id}/{source}",
         headers={"Authorization": token}
     )
     response_result = response.json()

@@ -100,9 +100,9 @@ def get_project_storyboard_bl(request, project_id):
         return {'data': {}, 'message': message, 'status': status}
 
 
-def send_synopsis(request, project_id):
+def send_synopsis(request, project_id, source):
     data, message, succeeded, status = send_synopsis_request(
-        request, project_id)
+        request, project_id, source)
     if succeeded:
         return {'data': data, 'message': message, 'status': status}
     else:

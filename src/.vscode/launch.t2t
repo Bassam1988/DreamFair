@@ -8,7 +8,7 @@
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "storyboard//consumer.py",
+            "program": "text_to_text_service//consumer.py",
             "console": "integratedTerminal"
         }
     ]

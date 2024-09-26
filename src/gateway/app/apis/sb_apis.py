@@ -108,9 +108,9 @@ def get_project_storyboard(project_id):
         return CustomResponse(succeeded=False, message=result['message'], status=result['status'])
 
 
-@gateway_sb_blueprint.route('/get_script/<uuid:project_id>', methods=['Post'])
-def get_script(project_id):
-    result = send_synopsis(request, project_id)
+@gateway_sb_blueprint.route('/get_script/<uuid:project_id>/<int:source>', methods=['Post'])
+def get_script(project_id,source):
+    result = send_synopsis(request, project_id, source)
     if result['status'] == 200:
         return CustomResponse(succeeded=True, data=result['data'], status=200)
     else:
