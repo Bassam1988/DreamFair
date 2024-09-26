@@ -187,8 +187,8 @@ def generate_storyboard(data, db_session, for_consumer=False):
         str: The generated script or an error message.
     """
  
-    if for_consumer:
-        data = json.loads(data)
+    # if for_consumer:
+    #     data = json.loads(data)
     script = data['script']
     # script_style = data['script_style']
     # video_duration = data['video_duration']

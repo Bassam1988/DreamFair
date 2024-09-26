@@ -142,7 +142,7 @@ def generate_storyboard_description(user_id, project_id, source):
         if source==1:
             return generate_storyboards_by_synopsis(project)
         if source==2:
-            generate_storyboards_by_script(project)
+            return generate_storyboards_by_script(project)
     return {'message': 'No data found', 'status': 404}
 
         
