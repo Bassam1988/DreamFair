@@ -150,6 +150,8 @@ def generate_storyboard_description(user_id, project_id, source):
 def generate_storyboards_by_synopsis(project):
         project_schema = ProjectSchema()
         synopsis = project.synopsis
+        if synopsis == None or synopsis=="":
+            return {'message': 'Script is mandatory', 'status': 400}
         reference = str(project.id)
         script_style = project.script_style
         if script_style:
@@ -182,6 +184,8 @@ def generate_storyboards_by_synopsis(project):
 def generate_storyboards_by_script(project):
         project_schema = ProjectSchema()    
         script = project.script
+        if script == None or script=="":
+            return {'message': 'Script is mandatory', 'status': 400}
         reference = str(project.id)
         script_style = project.script_style
         if script_style:
