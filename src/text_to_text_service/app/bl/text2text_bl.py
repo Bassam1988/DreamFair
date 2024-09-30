@@ -118,7 +118,7 @@ def generate_script(data, db_session, for_consumer=False):
         "{'script': 'the generated script', 'storyboards':{'1':'scene: script part, description: generated storyboard 1','2':'scene: script part, description: generated storyboard 2', ...}} "\
         " and without any additional characters "\
         "don't add \n at the end of result, the result should begine and end like this {} "\
-        "don't add \n out side the generated text, the result should be exactly like this"\
+        "the result should be exactly like this"\
         "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' "
     try:
         retry = 0
@@ -196,15 +196,16 @@ def generate_storyboard(data, db_session, for_consumer=False):
     openai_key = os.getenv('OPENAI_SECRET_KEY')
 
     client = OpenAI(api_key=openai_key)
-    prompt = f"Generate the storyboards' descriptions for the following script: {script}."\
+    prompt = f"Generate the storyboards' descriptions for the following script.\n"\
         "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
             "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
         "return the hole result as dictionary, like this:"\
         "{'storyboards':{'1':'scene: script part, description: generated storyboard 1','2':'scene: script part, description: generated storyboard 2', ...}} "\
         " and without any additional characters "\
         "don't add \n at the end of result, the result should begine and end like this {} "\
-        "don't add \n out side the generated text, the result should be exactly like this"\
-        "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' "
+        "the result should be exactly like this"\
+        "'{\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' \n"\
+        "this is the script: {script}."
     try:
         retry = 0
         error = None

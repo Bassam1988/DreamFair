@@ -90,7 +90,7 @@ class Project(Base):
     boards_per_min = relationship(
         "BoardsPerMin", back_populates="projects")
     storyboards = relationship("Storyboard", back_populates="project")
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class Storyboard(Base):
