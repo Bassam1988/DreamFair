@@ -36,7 +36,7 @@ def create_operation_storyboard(dict_data, response_data_message, reference, pro
         if source==1:
             generated_script = dict_data['script']
         if source==2:
-            generated_script = dict_data['storyboards']
+            generated_script = str(dict_data['storyboards'])
     text2text_operation_data['generated_script'] = generated_script
     errors = text2text_operation_schema.validate(text2text_operation_data)
     if errors:
