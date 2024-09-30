@@ -205,7 +205,7 @@ def generate_storyboard(data, db_session, for_consumer=False):
         "don't add \n at the end of result, the result should begine and end like this {} "\
         "the result should be exactly like this"\
         "'{\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' \n"\
-        "this is the script: {script}."
+        f"this is the script: {script}."
     try:
         retry = 0
         error = None
