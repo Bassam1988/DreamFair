@@ -24,7 +24,7 @@ text_to_text_n_queue = RabbitMQ(host=rabbitmq_host, port=rabbitmq_port,
                                 user=rabbitmq_user, password=rabbitmq_password, queue_name=rabbitmq_n_queue_name)
 
 
-def create_operation_storyboard(dict_data, response_data_message, reference, prompt, db_session):
+def create_operation_storyboard(dict_data, response_data_message, reference, prompt, db_session,source=1):
     text2text_operation_schema = Text2TextOperationSchema()
     text2text_operation_data = {
         'reference': reference,
@@ -33,7 +33,10 @@ def create_operation_storyboard(dict_data, response_data_message, reference, pro
 
     generated_script = ""
     if dict_data:
-        generated_script = dict_data['script']
+        if source==1:
+            generated_script = dict_data['script']
+        if source==2:
+            generated_script = dict_data['storyboards']
     text2text_operation_data['generated_script'] = generated_script
     errors = text2text_operation_schema.validate(text2text_operation_data)
     if errors:
@@ -237,7 +240,7 @@ def generate_storyboard(data, db_session, for_consumer=False):
                     raise e
 
             create_operation_storyboard(
-                dict_data, response_data_message, reference, prompt, db_session)
+                dict_data, response_data_message, reference, prompt, db_session, source=2)
             response_data = {'data': dict_data}
             if for_consumer:
                 # insert result in text2text_notification queue to get it to storyboard app
