@@ -151,7 +151,7 @@ def generate_storyboards_by_synopsis(project):
         project_schema = ProjectSchema()
         synopsis = project.synopsis
         if synopsis == None or synopsis=="":
-            return {'message': 'Script is mandatory', 'status': 400}
+            return {'message': 'Synopsis is mandatory', 'status': 400}
         reference = str(project.id)
         script_style = project.script_style
         if script_style:
@@ -329,13 +329,14 @@ def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
                 db_session.commit()
                 return
             else:
-                project.status = Status.query.filter(
-                    Status.code_name == 'Wa').first()
-                db_session.commit()
+                
                 error = dict_data['e_message']
                 raise Exception(error)
         return "error"
     except Exception as e:
+        project.status = Status.query.filter(
+                    Status.code_name == 'Wa').first()
+        db_session.commit()
         if for_consumer:
             # insert in error table
             t2t_error_processing(project_id, str(e),
@@ -381,13 +382,14 @@ def set_storyboard_desc(dict_data, db_session, for_consumer=True):
                 db_session.commit()
                 return
             else:
-                project.status = Status.query.filter(
-                    Status.code_name == 'Wa').first()
-                db_session.commit()
+                
                 error = dict_data['e_message']
                 raise Exception(error)
         return "error"
     except Exception as e:
+        project.status = Status.query.filter(
+                    Status.code_name == 'Wa').first()
+        db_session.commit()
         if for_consumer:
             # insert in error table
             t2t_error_processing(project_id, str(e),
@@ -441,13 +443,14 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
                 db_session.commit()
                 return
             else:
-                project.status = Status.query.filter(
-                    Status.code_name == 'GedSc').first()
-                db_session.commit()
+                
                 error = dict_data['e_message']
                 raise error
         return "error"
     except Exception as e:
+        project.status = Status.query.filter(
+                    Status.code_name == 'GedSc').first()
+        db_session.commit()
         if for_consumer:
             # insert in error table
             t2i_error_processing(project_id, str(e),

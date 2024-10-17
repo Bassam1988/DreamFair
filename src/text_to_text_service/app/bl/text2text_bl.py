@@ -82,12 +82,12 @@ def insert_error(reference, error, message, db_session):
     db_session.commit()
 
 
-def error_processing(reference, error, message, db_session):
+def error_processing(reference, error, message, source, db_session):
     try:
         insert_error(reference, error, message, db_session)
         dict_data = dict()
         set_message_storyboards(
-            reference, dict_data, success=0, error=str(error))
+            reference, dict_data, success=0, error=str(error), source=source)
     except Exception as e:
         pass
 
@@ -165,14 +165,14 @@ def generate_script(data, db_session, for_consumer=False):
         else:
             if for_consumer:
                 # insert in error table
-                error_processing(reference, error, prompt, db_session)
+                error_processing(reference, error, prompt, 1, db_session)
                 return
             else:
                 raise error
     except Exception as e:
         if for_consumer:
             # insert in error table
-            error_processing(reference, str(e.args), prompt, db_session)
+            error_processing(reference, str(e.args), prompt, 1, db_session)
             return
         else:
             raise e
@@ -251,14 +251,14 @@ def generate_storyboard(data, db_session, for_consumer=False):
         else:
             if for_consumer:
                 # insert in error table
-                error_processing(reference, error, prompt, db_session)
+                error_processing(reference, error, prompt, 2, db_session)
                 return
             else:
                 raise error
     except Exception as e:
         if for_consumer:
             # insert in error table
-            error_processing(reference, str(e.args), prompt, db_session)
+            error_processing(reference, str(e.args), prompt, 2, db_session)
             return
         else:
             raise e
