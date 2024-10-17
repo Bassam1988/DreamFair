@@ -102,7 +102,7 @@ class Storyboard(Base):
     image = Column(String(25000))
     scene_description = Column(String(25000))
     order = Column(Integer)
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class T2TOperationErrors(Base):
@@ -111,7 +111,7 @@ class T2TOperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class T2IOperationErrors(Base):
@@ -120,4 +120,4 @@ class T2IOperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
