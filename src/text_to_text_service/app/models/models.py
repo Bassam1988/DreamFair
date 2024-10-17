@@ -14,7 +14,7 @@ class Text2TextOperation(Base):
     original_text = Column(String(10000))
     generated_text = Column(String(10000))
     generated_script = Column(String(10000))
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
     storyboards = relationship(
         "Text2TextOperationStoryboard", back_populates="text2text_operation")
 
@@ -28,7 +28,7 @@ class Text2TextOperationStoryboard(Base):
         "Text2TextOperation", back_populates="storyboards")
     generated_text = Column(String(10000))
     order = Column(Integer)
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
 
 
 class OperationErrors(Base):
@@ -37,4 +37,4 @@ class OperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
+    created_date = Column(DateTime, default=datetime.now())
