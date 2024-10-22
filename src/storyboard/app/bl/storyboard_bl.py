@@ -135,17 +135,25 @@ def get_project_storyboard_bl(user_id, project_id):
     return {'message': 'No data found', 'status': 404}
 
 
-def generate_storyboard_description(user_id, project_id, source):
-    
-    project = Project.query.get(project_id)
-    if project and str(project.user_id) == user_id:
-        if source==1:
-            return generate_storyboards_by_synopsis(project)
-        if source==2:
-            return generate_storyboards_by_script(project)
-    return {'message': 'No data found', 'status': 404}
-
-        
+def generate_storyboard_description(user_id, project_id, source,tries=0):
+    try_count=tries+1
+    try:
+        project = Project.query.get(project_id)
+        if project and str(project.user_id) == user_id:
+            if source==1:
+                return generate_storyboards_by_synopsis(project)
+            if source==2:
+                return generate_storyboards_by_script(project)
+        return {'message': 'No data found', 'status': 404}
+    except Exception as e:
+        if str(e)=="('Transport indicated EOF',)":            
+            if try_count<4:
+                generate_storyboard_description(user_id, project_id, source,try_count)
+            else:
+                raise e
+        else:
+            raise e
+                
 
 def generate_storyboards_by_synopsis(project):
         project_schema = ProjectSchema()
@@ -215,51 +223,64 @@ def generate_storyboards_by_script(project):
     
 
 
-def send_script(user_id, project_id):
-    project_schema = ProjectSchema()
-    project = Project.query.get(project_id)
-    if project and str(project.user_id) == user_id:
+def send_script(user_id, project_id,tries=0):
+    try_count=tries+1
+    try:
+        project_schema = ProjectSchema()
+        project = Project.query.get(project_id)
+        if project and str(project.user_id) == user_id:
 
-        reference = str(project.id)
+            reference = str(project.id)
 
-        orginal_script = project.script
+            orginal_script = project.script
 
-        prompts = {prompt.order: prompt.scene_description
-                   for prompt in project.storyboards}
+            prompts = {prompt.order: prompt.scene_description
+                    for prompt in project.storyboards}
 
-        aspect_ratio = project.aspect_ratio
-        if aspect_ratio:
-            aspect_ratio_name = aspect_ratio.name
+            aspect_ratio = project.aspect_ratio
+            if aspect_ratio:
+                aspect_ratio_name = aspect_ratio.name
+            else:
+                return {'message': 'Aspect ratio is mandatory', 'status': 400}
+
+            boards_per_min = project.boards_per_min
+            if boards_per_min:
+                boards_per_min_count = boards_per_min.count
+            else:
+                return {'message': 'Boards per min is mandatory', 'status': 400}
+
+            storyboard_style = project.storyboard_style
+            if storyboard_style:
+                storyboard_style_name = storyboard_style.name
+            else:
+                return {'message': 'Storyboard tyle is mandatory', 'status': 400}
+
+            message = {
+                "reference": reference,
+                "orginal_script": orginal_script,
+                "prompts": prompts,
+                "aspect_ratio": aspect_ratio_name,
+                "storyboard_style": storyboard_style_name,
+            }
+            text_to_image_queue.send_message(
+                message=message, routing_key=m_queue)
+            project.status = Status.query.filter(
+                Status.code_name == 'GeSt').first()
+            db_session.commit()
+            data = project_schema.dump(project)
+            return {'data': data, 'status': 200}
+        return {'message': 'No data found', 'status': 404}
+    except Exception as e:
+        if str(e)=="('Transport indicated EOF',)":
+            if try_count<4:
+                send_script(user_id, project_id,try_count)
+            else:
+                raise e
         else:
-            return {'message': 'Aspect ratio is mandatory', 'status': 400}
+            raise e
 
-        boards_per_min = project.boards_per_min
-        if boards_per_min:
-            boards_per_min_count = boards_per_min.count
-        else:
-            return {'message': 'Boards per min is mandatory', 'status': 400}
 
-        storyboard_style = project.storyboard_style
-        if storyboard_style:
-            storyboard_style_name = storyboard_style.name
-        else:
-            return {'message': 'Storyboard tyle is mandatory', 'status': 400}
-
-        message = {
-            "reference": reference,
-            "orginal_script": orginal_script,
-            "prompts": prompts,
-            "aspect_ratio": aspect_ratio_name,
-            "storyboard_style": storyboard_style_name,
-        }
-        text_to_image_queue.send_message(
-            message=message, routing_key=m_queue)
-        project.status = Status.query.filter(
-            Status.code_name == 'GeSt').first()
-        db_session.commit()
-        data = project_schema.dump(project)
-        return {'data': data, 'status': 200}
-    return {'message': 'No data found', 'status': 404}
+    
 
 
 def t2t_insert_error(reference, error, message, db_session):
@@ -445,7 +466,7 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
             else:
                 
                 error = dict_data['e_message']
-                raise error
+                raise Exception(error)
         return "error"
     except Exception as e:
         project.status = Status.query.filter(
