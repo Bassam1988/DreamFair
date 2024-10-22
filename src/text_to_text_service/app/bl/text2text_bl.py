@@ -92,7 +92,7 @@ def error_processing(reference, error, message, source, db_session):
         pass
 
 
-def generate_script(data, db_session, for_consumer=False):
+def generate_script(data, db_session, for_consumer=False, retries=0):
     """Generates a script using OpenAI based on user inputs.
 
     Args:
@@ -105,6 +105,7 @@ def generate_script(data, db_session, for_consumer=False):
     """
     # if for_consumer:
     #     data = json.loads(data)
+    retry_count=retries+1
     synopsis = data['synopsis']
     script_style = data['script_style']
     video_duration = data['video_duration']
@@ -171,14 +172,17 @@ def generate_script(data, db_session, for_consumer=False):
                 raise error
     except Exception as e:
         if for_consumer:
-            # insert in error table
-            error_processing(reference, str(e.args), prompt, 1, db_session)
-            return
+            if retry_count<4:
+                generate_script(data, db_session, for_consumer,retry_count)
+            else:
+                # insert in error table
+                error_processing(reference, str(e.args), prompt, 1, db_session)
+                return
         else:
             raise e
 
 
-def generate_storyboard(data, db_session, for_consumer=False):
+def generate_storyboard(data, db_session, for_consumer=False,retries=0):
     """Generates a script using OpenAI based on user inputs.
 
     Args:
@@ -189,7 +193,7 @@ def generate_storyboard(data, db_session, for_consumer=False):
     Returns:
         str: The generated script or an error message.
     """
- 
+    retry_count= retries+1
     # if for_consumer:
     #     data = json.loads(data)
     script = data['script']
@@ -257,9 +261,12 @@ def generate_storyboard(data, db_session, for_consumer=False):
                 raise error
     except Exception as e:
         if for_consumer:
-            # insert in error table
-            error_processing(reference, str(e.args), prompt, 2, db_session)
-            return
+            if retry_count<4:
+                generate_storyboard(data, db_session, for_consumer,retries)
+            else:
+                # insert in error table
+                error_processing(reference, str(e.args), prompt, 2, db_session)
+                return
         else:
             raise e
 

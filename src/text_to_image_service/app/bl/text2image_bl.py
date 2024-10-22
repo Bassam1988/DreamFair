@@ -82,29 +82,31 @@ def download_image(url):
         raise Exception("faild to download image")
 
 
-def create_storyboard_operation_images(images_data, reference, orginal_script, db_session):
-    text2image_operation_schema = Text2ImageOperationSchema()
-    text2image_operation_data = {
-        'reference': reference,
-        'script_text': orginal_script
-    }
-
-    errors = text2image_operation_schema.validate(text2image_operation_data)
-    if errors:
-        raise Exception(errors)
-    text2image_operation = Text2ImageOperation(**text2image_operation_data)
-    images_list = []
-    db_session.add(text2image_operation)
-    db_session.flush()
-    images_id = []
-    returned_data = {}
-    media_folder = os.getenv('MEDIA_FOLDER')
-    save_data = {
-        'reference': reference,
-        'media_folder': media_folder
-    }
-
+def create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retries=0):
+    retry_count=retries+1
     try:
+        text2image_operation_schema = Text2ImageOperationSchema()
+        text2image_operation_data = {
+            'reference': reference,
+            'script_text': orginal_script
+        }
+
+        errors = text2image_operation_schema.validate(text2image_operation_data)
+        if errors:
+            raise Exception(errors)
+        text2image_operation = Text2ImageOperation(**text2image_operation_data)
+        images_list = []
+        db_session.add(text2image_operation)
+        db_session.flush()
+        images_id = []
+        returned_data = {}
+        media_folder = os.getenv('MEDIA_FOLDER')
+        save_data = {
+            'reference': reference,
+            'media_folder': media_folder
+        }
+
+    
         text2image_operation_id = text2image_operation.id
         save_data['text2image_operation_id'] = text2image_operation_id
         for image_data in images_data:
@@ -142,10 +144,13 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
             # delete images from MongoDB
             for fid in images_id:
                 os.remove(fid)
-        raise e
+        if retry_count<4:
+            create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retry_count)
+        else:
+            raise e
 
 
-def generate_storyboards(data, db_session, for_consumer=False):
+def generate_storyboards(data, db_session, for_consumer=False,retries=0):
     """Generates storyboards using DALL·E based on the script and user preferences.
 
     Args:
@@ -158,6 +163,7 @@ def generate_storyboards(data, db_session, for_consumer=False):
         list: URLs of the generated storyboard images or error message placeholders.
     """
     # storyboards stylse, size, and other data
+    retry_count=retries+1
     try:
         if for_consumer:
             data = json.loads(data)
@@ -194,9 +200,12 @@ def generate_storyboards(data, db_session, for_consumer=False):
         return {'data': images_data, }
     except Exception as e:
         if for_consumer:
-            # insert in error table
-            error_processing(reference, str(e.args), prompt, db_session)
-            return
+            if retry_count<4:
+                generate_storyboards(data, db_session, for_consumer,retry_count)
+            else:
+                # insert in error table
+                error_processing(reference, str(e.args), prompt, db_session)
+                return
         else:
             raise e
 
