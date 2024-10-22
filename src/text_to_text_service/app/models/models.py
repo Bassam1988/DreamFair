@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
+from sqlalchemy.sql import func
 
 
 class Text2TextOperation(Base):
@@ -14,7 +15,7 @@ class Text2TextOperation(Base):
     original_text = Column(String(10000))
     generated_text = Column(String(10000))
     generated_script = Column(String(10000))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
     storyboards = relationship(
         "Text2TextOperationStoryboard", back_populates="text2text_operation")
 
@@ -28,7 +29,7 @@ class Text2TextOperationStoryboard(Base):
         "Text2TextOperation", back_populates="storyboards")
     generated_text = Column(String(10000))
     order = Column(Integer)
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
 
 
 class OperationErrors(Base):
@@ -37,4 +38,4 @@ class OperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())

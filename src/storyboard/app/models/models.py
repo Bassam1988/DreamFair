@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID  # Specific to PostgreSQL
 import uuid
 from datetime import datetime, timezone
+from sqlalchemy.sql import func
 
 
 class ScriptStyle(Base):
@@ -90,7 +91,7 @@ class Project(Base):
     boards_per_min = relationship(
         "BoardsPerMin", back_populates="projects")
     storyboards = relationship("Storyboard", back_populates="project")
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
 
 
 class Storyboard(Base):
@@ -102,7 +103,7 @@ class Storyboard(Base):
     image = Column(String(25000))
     scene_description = Column(String(25000))
     order = Column(Integer)
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
 
 
 class T2TOperationErrors(Base):
@@ -111,7 +112,7 @@ class T2TOperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
 
 
 class T2IOperationErrors(Base):
@@ -120,4 +121,4 @@ class T2IOperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())

@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
+from sqlalchemy.sql import func
 
 
 class Text2ImageOperation(Base):
@@ -12,7 +13,7 @@ class Text2ImageOperation(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     reference = Column(String(50))
     script_text = Column(String(10000))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
     images = relationship(
         "Text2ImageOperationImage", back_populates="text2image_operation")
 
@@ -27,7 +28,7 @@ class Text2ImageOperationImage(Base):
     scene_text = Column(String(10000))
     order = Column(Integer)
     url = Column(String(250))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
 
 
 class OperationErrors(Base):
@@ -36,4 +37,4 @@ class OperationErrors(Base):
     reference = Column(String(50))
     script_text = Column(String(10000))
     error = Column(String(25000))
-    created_date = Column(DateTime, default=datetime.now())
+    created_date = Column(DateTime, default=func.now())
