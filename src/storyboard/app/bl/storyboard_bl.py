@@ -146,14 +146,12 @@ def generate_storyboard_description(user_id, project_id, source,tries=0):
                 return generate_storyboards_by_script(project)
         return {'message': 'No data found', 'status': 404}
     except Exception as e:
-        if str(e)=="('Transport indicated EOF',)":            
-            if try_count<4:
-                generate_storyboard_description(user_id, project_id, source,try_count)
-            else:
-                raise e
+                  
+        if try_count<4:
+            generate_storyboard_description(user_id, project_id, source,try_count)
         else:
             raise e
-                
+             
 
 def generate_storyboards_by_synopsis(project):
         project_schema = ProjectSchema()
@@ -271,11 +269,8 @@ def send_script(user_id, project_id,tries=0):
             return {'data': data, 'status': 200}
         return {'message': 'No data found', 'status': 404}
     except Exception as e:
-        if str(e)=="('Transport indicated EOF',)":
-            if try_count<4:
-                send_script(user_id, project_id,try_count)
-            else:
-                raise e
+        if try_count<4:
+            send_script(user_id, project_id,try_count)            
         else:
             raise e
 
