@@ -152,29 +152,41 @@ def get_project_storyboard(request, project_id):
     return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
 
 
-def send_synopsis_request(request, project_id, source):
+def send_synopsis_request(request, project_id, source, retries=0):
     token = request.headers.get('Authorization')
 
     if not token:
         raise Exception('missing credentails!')
 
-    response = requests.post(
-        f"{main_url}/storyboard/get_script/{project_id}/{source}",
-        headers={"Authorization": token}
-    )
-    response_result = response.json()
-    return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+    retry_count=retries+1
+    try:
+        response = requests.post(
+            f"{main_url}/storyboard/get_script/{project_id}/{source}",
+            headers={"Authorization": token}
+        )
+        response_result = response.json()
+        return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+    except Exception as e:
+        if retry_count<3:
+            send_synopsis_request(request, project_id, source, retry_count)
+        else:
+            raise e
 
-
-def send_script_request(request, project_id):
+def send_script_request(request, project_id, retries=0):
     token = request.headers.get('Authorization')
 
     if not token:
         raise Exception('missing credentails!')
-
-    response = requests.post(
-        f"{main_url}/storyboard/generate_storyboards/{project_id}",
-        headers={"Authorization": token}
-    )
-    response_result = response.json()
-    return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+    retry_count=retries+1
+    try:
+        response = requests.post(
+            f"{main_url}/storyboard/generate_storyboards/{project_id}",
+            headers={"Authorization": token}
+        )
+        response_result = response.json()
+        return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+    except Exception as e:
+        if retry_count<3:
+            send_script_request(request, project_id, retry_count)
+        else:
+            raise e
