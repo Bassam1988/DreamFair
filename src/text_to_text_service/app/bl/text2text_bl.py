@@ -173,7 +173,7 @@ def generate_script(data, db_session, for_consumer=False, retries=0):
     except Exception as e:
         if for_consumer:
             if retry_count<4:
-                generate_script(data, db_session, for_consumer,retry_count)
+                return generate_script(data, db_session, for_consumer,retry_count)
             else:
                 # insert in error table
                 error_processing(reference, str(e.args), prompt, 1, db_session)
@@ -262,7 +262,7 @@ def generate_storyboard(data, db_session, for_consumer=False,retries=0):
     except Exception as e:
         if for_consumer:
             if retry_count<4:
-                generate_storyboard(data, db_session, for_consumer,retries)
+                return generate_storyboard(data, db_session, for_consumer,retries)
             else:
                 # insert in error table
                 error_processing(reference, str(e.args), prompt, 2, db_session)

@@ -145,7 +145,7 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
             for fid in images_id:
                 os.remove(fid)
         if retry_count<4:
-            create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retry_count)
+           return create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retry_count)
         else:
             raise e
 
@@ -201,7 +201,7 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
     except Exception as e:
         if for_consumer:
             if retry_count<4:
-                generate_storyboards(data, db_session, for_consumer,retry_count)
+                return generate_storyboards(data, db_session, for_consumer,retry_count)
             else:
                 # insert in error table
                 error_processing(reference, str(e.args), prompt, db_session)
