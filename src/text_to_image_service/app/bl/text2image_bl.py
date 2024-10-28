@@ -214,9 +214,9 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
 def insert_error(reference, error, message, db_session):
     operation_error_schema = OperationErrorSchema()
     operation_error_data = {
-        'reference': reference,
-        'script_text': message,
-        "error": error
+        'reference': str(reference),
+        'script_text': str(message),
+        "error": str(error)
     }
 
     errors = operation_error_schema.validate(operation_error_data)
