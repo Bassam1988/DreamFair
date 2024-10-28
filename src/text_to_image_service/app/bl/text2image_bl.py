@@ -164,14 +164,15 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
     """
     # storyboards stylse, size, and other data
     retry_count=retries+1
-    try:
-        if for_consumer:
+    if for_consumer:
             data = json.loads(data)
-        orginal_script = data['orginal_script']
-        prompts = data['prompts']
-        reference = data['reference']
-        aspect_ratio = data['aspect_ratio']
-        storyboard_style = data['storyboard_style']
+    orginal_script = data['orginal_script']
+    prompts = data['prompts']
+    reference = data['reference']
+    aspect_ratio = data['aspect_ratio']
+    storyboard_style = data['storyboard_style']
+    try:
+        
         prompt = ""
         images_data = []
         # prompt = f"I will give you the totla script, and the prompt of each image inside that script,"\

@@ -23,6 +23,19 @@
 #     echo "Service at $SERVICE_DIR started for $SERVICE_NAME"
 # }
 
+start_notification_server() {
+    SERVICE_DIR=$1  
+    SERVICE_NAME=$2  
+
+    echo "Starting service in $SERVICE_DIR ...for $SERVICE_NAME"
+    cd $SERVICE_DIR
+    source env/bin/activate
+    nohup python3 socketio_server.py > flask_$SERVICE_NAME.log 2>&1 &
+    echo $! > flask_$SERVICE_NAME.pid
+    deactivate
+    echo "Service at $SERVICE_DIR started for $SERVICE_NAME"
+}
+
 # Modified function to start a Flask service
 start_flask_service() {
     SERVICE_DIR=$1
@@ -56,6 +69,8 @@ start_consumer_service() {
 #cd /home/ubuntu/DreamFair/DreamFair/src/rabbit
 #docker compose -f DockerFile.yaml up -d
 # Start each service on a different port
+start_notification_server /home/ubuntu/DreamFair/DreamFair/src/storyboard socketio_server
+
 start_flask_service /home/ubuntu/DreamFair/DreamFair/src/auth 5000
 start_flask_service /home/ubuntu/DreamFair/DreamFair/src/storyboard 5001
 start_flask_service /home/ubuntu/DreamFair/DreamFair/src/gateway 8000
