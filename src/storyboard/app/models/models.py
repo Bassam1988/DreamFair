@@ -20,6 +20,7 @@ class StoryBoardStyle(Base):
     __tablename__ = 'storyboard_styles'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(50), unique=True)
+    description = Column(String(150), unique=False)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="storyboard_style")
 

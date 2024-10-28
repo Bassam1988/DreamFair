@@ -16,6 +16,7 @@ class ScriptStyleSchema(Schema):
 class StoryBoardStyleSchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str()
+    description = fields.Str()
     code_name = fields.Str()
 
 
