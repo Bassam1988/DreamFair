@@ -53,20 +53,24 @@ def sb_create_project(request, data):
     return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
 
 
-def sb_update_project(request, project_id, data):
+def sb_update_project(request, project_id, data, retries=0):
     token = request.headers.get('Authorization')
-
+    retry_count=retries+1
     if not token:
         raise Exception('missing credentails!')
-
-    response = requests.put(
-        f"{main_url}/storyboard/update_project/{str(project_id)}",
-        headers={"Authorization": token},
-        json=data
-    )
-    response_result = response.json()
-    return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
-
+    try:
+        response = requests.put(
+            f"{main_url}/storyboard/update_project/{str(project_id)}",
+            headers={"Authorization": token},
+            json=data
+        )
+        response_result = response.json()
+        return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+    except Exception as e:
+        if retry_count<2:
+            sb_update_project(request, project_id, data,retry_count)
+        else:
+            raise e
 
 def get_script_styles(request):
     token = request.headers.get('Authorization')

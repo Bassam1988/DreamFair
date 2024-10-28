@@ -53,9 +53,9 @@ class RabbitMQ():
             print(str(e))
             raise e
 
-    def create_callback(self, process_func, db_session):
+    def create_callback(self, process_func, db_session, socket=None):
         def callback(ch, method, properties, body):
-            err = process_func(body, db_session, for_consumer=True)
+            err = process_func(body, db_session, for_consumer=True, socket=socket)
             if err:
                 ch.basic_nack(delivery_tag=method.delivery_tag)
             else:

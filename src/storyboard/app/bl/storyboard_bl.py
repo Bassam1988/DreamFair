@@ -299,14 +299,21 @@ def t2t_error_processing(reference, error, message, db_session):
     except Exception as e:
         pass
 
+def on_emit_acknowledgment(response):
+    print("Server acknowledgment:", response)
 
-def set_scribt_storyboard_desc(data, db_session, for_consumer=True):
+def set_scribt_storyboard_desc(data, db_session, for_consumer=True, socket=None):
     dict_data = json.loads(data)
     source=dict_data['source']
     if source==1:
         set_scribt_and_storyboard_desc(dict_data,db_session,for_consumer)
     if source==2:
          set_storyboard_desc(dict_data, db_session, for_consumer=True)
+    ref = dict_data['reference']
+    socket.emit('project_status_updated', {
+                    'project_id': ref,                    
+                    'message': 'Project status updated'
+                }, callback=on_emit_acknowledgment)
     
 
 def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
@@ -438,7 +445,7 @@ def t2i_error_processing(reference, error, message, db_session):
         pass
 
 
-def set_scribt_storyboard_images(data, db_session, for_consumer=True):
+def set_scribt_storyboard_images(data, db_session, for_consumer=True, socket=None):
     try:
         dict_data = json.loads(data)
 
@@ -457,6 +464,11 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
                 project.status = Status.query.filter(
                     Status.code_name == 'GedSt').first()
                 db_session.commit()
+                
+                socket.emit('project_status_updated', {
+                    'project_id': project_id,                    
+                    'message': 'Project status updated'
+                })
                 return
             else:
                 
@@ -476,10 +488,10 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True):
             raise e
 
 
-def t2t_consumer_bl(db_session):
+def t2t_consumer_bl(db_session, socket):
     try:
         callback_func = text_to_text_n_queue.create_callback(
-            set_scribt_storyboard_desc, db_session)
+            set_scribt_storyboard_desc, db_session, socket)
         text_to_text_n_queue.consumer(queue=os.getenv(
             'RMQ_T2T_N_QUEUE'), callback=callback_func)
     except Exception as e:
@@ -489,10 +501,10 @@ def t2t_consumer_bl(db_session):
         db_session.close()
 
 
-def t2m_consumer_bl(db_session):
+def t2m_consumer_bl(db_session, socket):
     try:
         callback_func = text_to_image_n_queue.create_callback(
-            set_scribt_storyboard_images, db_session)
+            set_scribt_storyboard_images, db_session, socket)
         text_to_image_n_queue.consumer(queue=os.getenv(
             'RMQ_T2M_N_QUEUE'), callback=callback_func)
     except Exception as e:
