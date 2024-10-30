@@ -202,6 +202,7 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
     except Exception as e:
         if for_consumer:
             if retry_count<4:
+                data=json.dumps(data)
                 return generate_storyboards(data, db_session, for_consumer,retry_count)
             else:
                 # insert in error table
