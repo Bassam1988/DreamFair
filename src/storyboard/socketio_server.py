@@ -4,7 +4,10 @@ from eventlet import wsgi
 import eventlet
 
 # Create a Socket.IO server
-sio = socketio.Server(cors_allowed_origins='*')
+sio = socketio.Server(cors_allowed_origins='*', 
+    ping_timeout=60000,  # 60 seconds
+    ping_interval=25000  # 25 seconds
+    )
 app = socketio.WSGIApp(sio)
 
 # Optional: Handle client connections if needed
