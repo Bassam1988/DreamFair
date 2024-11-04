@@ -20,10 +20,17 @@ def connect(sid, environ):
 def disconnect(sid):
     print(f'Client disconnected: {sid}')
 
+# @sio.event
+# def project_status_updated(sid, data):
+#     print("Received update for project:", data)
+#     return {"status": "received", "data":data}  # Acknowledgment sent to the client
+
 @sio.event
 def project_status_updated(sid, data):
-    print("Received update for project:", data)
-    return {"status": "received", "data":data}  # Acknowledgment sent to the client
+    print("Received project update:", data)
+    
+    # Broadcast the project update to all connected clients
+    sio.emit('broadcast_project_update', data)
 
 if __name__ == '__main__':
     # Run the server using a WSGI server like eventlet or gevent
