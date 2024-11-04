@@ -23,7 +23,7 @@ def disconnect(sid):
 @sio.event
 def project_status_updated(sid, data):
     print("Received update for project:", data)
-    return {"status": "received"}  # Acknowledgment sent to the client
+    return {"status": "received", "data":data}  # Acknowledgment sent to the client
 
 if __name__ == '__main__':
     # Run the server using a WSGI server like eventlet or gevent
