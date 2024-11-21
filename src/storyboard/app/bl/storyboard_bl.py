@@ -550,7 +550,6 @@ def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=Non
         images_data = dict_data.get('images_data', None)
         if project:
             if success == 1:
-
                 storyboard.image = images_data[str(storyboard.order)]
 
                 project.status = Status.query.filter(
@@ -596,7 +595,7 @@ def t2t_consumer_bl(db_session, socket):
 def t2m_consumer_bl(db_session, socket):
     try:
         callback_func = text_to_image_n_queue.create_callback(
-            set_scribt_storyboard_images, db_session, socket)
+            set_storyboard_image, db_session, socket)
         text_to_image_n_queue.consumer(queue=os.getenv(
             'RMQ_T2M_N_QUEUE'), callback=callback_func)
     except Exception as e:
