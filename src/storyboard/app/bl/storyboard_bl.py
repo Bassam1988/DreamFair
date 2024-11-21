@@ -230,7 +230,7 @@ def send_script(user_id, project_id,tries=0):
 
             reference = str(project.id)
 
-            orginal_script = project.script
+            orginal_script = project.script            
 
             prompts = {prompt.order: prompt.scene_description
                     for prompt in project.storyboards}
@@ -259,6 +259,7 @@ def send_script(user_id, project_id,tries=0):
                 "prompts": prompts,
                 "aspect_ratio": aspect_ratio_name,
                 "storyboard_style": storyboard_style_name,
+                "source":1
             }
             text_to_image_queue.send_message(
                 message=message, routing_key=m_queue)
@@ -275,6 +276,53 @@ def send_script(user_id, project_id,tries=0):
             raise e
 
 
+def update_regenerate_storyboard(user_id, storyboard_id,scene_description,tries=0):
+    try_count=tries+1
+    try:
+        project_schema = ProjectSchema()
+        storyboard = Storyboard.query.get(storyboard_id)
+        project = storyboard.project
+        if project and str(project.user_id) == user_id:
+
+            reference = str(storyboard.id)            
+
+            orginal_script = project.script
+            storyboard.scene_description=scene_description
+            prompts = {storyboard.order: scene_description}
+
+            aspect_ratio = project.aspect_ratio
+            if aspect_ratio:
+                aspect_ratio_name = aspect_ratio.name
+            else:
+                return {'message': 'Aspect ratio is mandatory', 'status': 400}
+            
+            storyboard_style = project.storyboard_style
+            if storyboard_style:
+                storyboard_style_name = storyboard_style.name + f" ({storyboard_style.description}) "
+            else:
+                return {'message': 'Storyboard tyle is mandatory', 'status': 400}
+
+            message = {
+                "reference": reference,
+                "orginal_script": orginal_script,
+                "prompts": prompts,
+                "aspect_ratio": aspect_ratio_name,
+                "storyboard_style": storyboard_style_name,
+                "source": 2
+            }
+            text_to_image_queue.send_message(
+                message=message, routing_key=m_queue)
+            project.status = Status.query.filter(
+                Status.code_name == 'GeSt').first()
+            db_session.commit()
+            data = project_schema.dump(project)
+            return {'data': data, 'status': 200}
+        return {'message': 'No data found', 'status': 404}
+    except Exception as e:
+        if try_count<4:
+            update_regenerate_storyboard(user_id, storyboard_id,scene_description,try_count)       
+        else:
+            raise e
     
 
 
@@ -313,7 +361,7 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True, socket=None)
     socket.emit('project_status_updated', {
                     'project_id': ref,                    
                     'message': 'Project status updated'
-                }, callback=on_emit_acknowledgment)
+                })
     
 
 def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
@@ -444,11 +492,16 @@ def t2i_error_processing(reference, error, message, db_session):
     except Exception as e:
         pass
 
+def set_storyboard_image(data, db_session, for_consumer=True, socket=None):
+    dict_data = json.loads(data)
+    source=dict_data["source"]
+    if source==1:
+        return set_scribt_storyboard_images(dict_data, db_session, for_consumer, socket)
+    if source==2:
+        return update_storyboard_image(dict_data, db_session, for_consumer, socket)
 
-def set_scribt_storyboard_images(data, db_session, for_consumer=True, socket=None):
+def set_scribt_storyboard_images(dict_data, db_session, for_consumer=True, socket=None):
     try:
-        dict_data = json.loads(data)
-
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
         success = dict_data['success']
@@ -486,6 +539,45 @@ def set_scribt_storyboard_images(data, db_session, for_consumer=True, socket=Non
             return
         else:
             raise e
+        
+def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=None):
+    try:
+        storyboard_id = dict_data['reference']
+        storyboard=Storyboard.query.get(storyboard_id)
+        project = storyboard.project
+        project_id=project.id
+        success = dict_data['success']
+        images_data = dict_data.get('images_data', None)
+        if project:
+            if success == 1:
+
+                storyboard.image = images_data[str(storyboard.order)]
+
+                project.status = Status.query.filter(
+                    Status.code_name == 'GedSt').first()
+                db_session.commit()
+                
+                socket.emit('project_status_updated', {
+                    'project_id': project_id,                    
+                    'message': 'Project status updated'
+                })
+                return
+            else:
+                
+                error = dict_data['e_message']
+                raise Exception(error)
+        return "error"
+    except Exception as e:
+        project.status = Status.query.filter(
+                    Status.code_name == 'GedSc').first()
+        db_session.commit()
+        if for_consumer:
+            # insert in error table
+            t2i_error_processing(project_id, str(e),
+                                 str(images_data), db_session)
+            return
+        else:
+            raise e        
 
 
 def t2t_consumer_bl(db_session, socket):

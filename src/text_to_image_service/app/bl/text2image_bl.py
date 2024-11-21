@@ -171,6 +171,7 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
     reference = data['reference']
     aspect_ratio = data['aspect_ratio']
     storyboard_style = data['storyboard_style']
+    source = data['source']
     try:
         
         prompt = ""
@@ -196,7 +197,7 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
             images_data, reference, orginal_script, db_session)
         if for_consumer:
             # send message to text_to_message_notification
-            set_message_storyboards_images(reference, returned_data)
+            set_message_storyboards_images(reference, returned_data, source=source)
             return
         return {'data': images_data, }
     except Exception as e:
@@ -237,12 +238,14 @@ def error_processing(reference, error, message, db_session):
         pass
 
 
-def set_message_storyboards_images(reference, dict_data=None, success=1, e_message=None):
+def set_message_storyboards_images(reference, dict_data=None, success=1, e_message=None, source=None):
     message = {
         'success': success,
         'e_message': e_message,
         'reference': reference,
-        'images_data': dict_data}
+        'images_data': dict_data,
+        'source':source
+        }
     text_to_image_n_queue.send_message(
         routing_key=rabbitmq_n_queue_name, message=message)
 
