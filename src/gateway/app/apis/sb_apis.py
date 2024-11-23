@@ -1,4 +1,4 @@
-from ..bl.storyboard_bl import get_all_aspect_ratios, get_all_boards_per_mins, get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, get_project_by_id, create_project_bl, get_project_storyboard_bl, send_script, send_synopsis, update_project_bl
+from ..bl.storyboard_bl import get_all_aspect_ratios, get_all_boards_per_mins, get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, get_project_by_id, create_project_bl, get_project_storyboard_bl, send_script, send_synopsis, update_project_bl, update_regenerate_storyboard
 from ..helper.custom_response import CustomResponse
 
 
@@ -120,6 +120,15 @@ def get_script(project_id,source):
 @gateway_sb_blueprint.route('/generate_storyboards/<uuid:project_id>', methods=['Post'])
 def generate_storyboards(project_id):
     result = send_script(request, project_id)
+    if result['status'] == 200:
+        return CustomResponse(succeeded=True, data=result['data'], status=200)
+    else:
+        return CustomResponse(succeeded=False, message=result['message'], status=result['status'])
+    
+
+@gateway_sb_blueprint.route('/regenerate_storyboard/<uuid:storyboard_id>', methods=['Post'])
+def regenerate_storyboard(storyboard_id):
+    result = update_regenerate_storyboard(request, storyboard_id)
     if result['status'] == 200:
         return CustomResponse(succeeded=True, data=result['data'], status=200)
     else:

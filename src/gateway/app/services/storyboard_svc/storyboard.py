@@ -194,3 +194,26 @@ def send_script_request(request, project_id, retries=0):
             send_script_request(request, project_id, retry_count)
         else:
             raise e
+        
+
+def send_update_regenerate_storyboard_request(request, storyboard_id, data, retries=0):
+    token = request.headers.get('Authorization')
+
+    if not token:
+        raise Exception('missing credentails!')
+    retry_count=retries+1
+    try:
+        response = requests.post(
+            f"{main_url}/storyboard/regenerate_storyboard/{storyboard_id}",
+            headers={"Authorization": token},
+            json=data
+        )
+        response_result = response.json()
+        return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+    except Exception as e:
+        if retry_count<3:
+            send_script_request(request, storyboard_id, retry_count)
+        else:
+            raise e        
+        
+
