@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "storyboard\\run_test.py",
+                "FLASK_APP": "gateway\\run_test.py",
                 "FLASK_DEBUG": "1"
             },
             "args": [
@@ -18,7 +18,7 @@
                 "--no-debugger",
                 "--no-reload",
                 "--port",
-                "5001"
+                "5013"
             ],
             "jinja": true,
             "autoStartBrowser": false

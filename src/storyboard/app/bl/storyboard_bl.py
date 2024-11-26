@@ -36,7 +36,7 @@ text_to_image_queue = RabbitMQ(
 
 def get_all_projects(user_id):
     project_schema = ProjectSchema()
-    projects = Project.query.filter_by(user_id=user_id).all()
+    projects = Project.query.filter_by(user_id=user_id).order_by(Project.created_date.desc()).all()
     data = project_schema.dump(projects, many=True)
     return {'data': data, 'status': 200}
 
