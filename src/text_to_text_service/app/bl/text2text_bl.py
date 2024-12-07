@@ -113,9 +113,9 @@ def generate_script(data, db_session, for_consumer=False, retries=0):
     openai_key = os.getenv('OPENAI_SECRET_KEY')
 
     client = OpenAI(api_key=openai_key)
-    prompt = f"As a storyboard artist\director Generate a script in the style of {script_style} for a video lasting {video_duration},\
+    prompt = f"As a professional film script writer\storyboard artist\director Generate a script in the style of {script_style} for a video lasting {video_duration},\
           inspired by the following synopsis: {synopsis}.\
-          After generating the script write the storyboards' descriptions for this script. "\
+          After generating the script and as a professional storyboard artist\director write the storyboards' descriptions for this script. "\
           "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
             "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
         "add the hole result as dictionary, like this:"\
@@ -203,7 +203,7 @@ def generate_storyboard(data, db_session, for_consumer=False,retries=0):
     openai_key = os.getenv('OPENAI_SECRET_KEY')
 
     client = OpenAI(api_key=openai_key)
-    prompt = f"As a storyboard artist\director Generate the storyboards' descriptions for the following script.\n"\
+    prompt = f"As a professional storyboard artist\director Generate the storyboards' descriptions with different camera angles & sizes suitable for each scene for the following script.\n"\
         "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
             "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
         "return the hole result as dictionary, like this:"\
