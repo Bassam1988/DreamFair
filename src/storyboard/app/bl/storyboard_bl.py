@@ -249,7 +249,7 @@ def send_script(user_id, project_id,tries=0):
 
             storyboard_style = project.storyboard_style
             if storyboard_style:
-                storyboard_style_name = storyboard_style.name + f" ({storyboard_style.description}) "
+                storyboard_style_name = storyboard_style.description
             else:
                 return {'message': 'Storyboard tyle is mandatory', 'status': 400}
 
