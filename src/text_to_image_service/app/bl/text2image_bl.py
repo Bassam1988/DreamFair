@@ -186,6 +186,8 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
 
         for key, value in prompts.items():
             prompt = f"As a professional storyboard artist\director Create one board of a storyboard with aspect ratio: {aspect_ratio} for scene in {storyboard_style} of description:{value}.\n"\
+                "the image should contain only one board for one scen, bon't put in one image more than one board\n"\
+                    "and make this one image for one scen, don't make it as multible boards or as storyboard, make it as image\n"\
                 " and take the total script of all scenes in considration to keep same context\n"\
                 f"the total script: {orginal_script} \n"
 
