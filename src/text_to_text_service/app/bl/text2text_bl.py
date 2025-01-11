@@ -126,7 +126,7 @@ def generate_script(data, db_session, for_consumer=False, retries=0):
     #     "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' "
     
     prompt = f"You are an expert scriptwriter and storyboard artist."\
-    "Generate a script in the style of {script_style} for a video lasting {video_duration} inspired by the following synopsis: {synopsis}.\n"\
+    f"Generate a script in the style of {script_style} for a video lasting {video_duration} inspired by the following synopsis: {synopsis}.\n"\
     "After generating the script generate the visual and textual descriptions for each scene's storyboard.\n"\
     "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"\
     "adn in Textual Description provide a concise summary of the story's key moments.\n"\
