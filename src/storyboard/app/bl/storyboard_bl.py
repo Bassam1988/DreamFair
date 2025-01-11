@@ -383,7 +383,7 @@ def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
                     storyboard_data = {
                         'project_id': project.id,
                         'order': key,
-                        'scene_description': value,
+                        'scene_description': str(value),
                         'name': key
                     }
                     storyboard_schema = StoryboardSchema()
@@ -436,7 +436,7 @@ def set_storyboard_desc(dict_data, db_session, for_consumer=True):
                     storyboard_data = {
                         'project_id': project.id,
                         'order': key,
-                        'scene_description': value,
+                        'scene_description': str(value),
                         'name': key
                     }
                     storyboard_schema = StoryboardSchema()
