@@ -113,17 +113,29 @@ def generate_script(data, db_session, for_consumer=False, retries=0):
     openai_key = os.getenv('OPENAI_SECRET_KEY')
 
     client = OpenAI(api_key=openai_key)
-    prompt = f"As a professional film script writer\storyboard artist\director Generate a script in the style of {script_style} for a video lasting {video_duration},\
-          inspired by the following synopsis: {synopsis}.\
-          After generating the script and as a professional storyboard artist\director write the storyboards' descriptions for this script. "\
-          "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
-            "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
-        "add the hole result as dictionary, like this:"\
-        "{'script': 'the generated script', 'storyboards':{'1':'scene: script part, description: generated storyboard 1','2':'scene: script part, description: generated storyboard 2', ...}} "\
-        " and without any additional characters "\
-        "don't add \n at the end of result, the result should begine and end like this {} "\
-        "the result should be exactly like this"\
-        "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' "
+    # prompt = f"As a professional film script writer\storyboard artist\director Generate a script in the style of {script_style} for a video lasting {video_duration},\
+    #       inspired by the following synopsis: {synopsis}.\
+    #       After generating the script and as a professional storyboard artist\director write the storyboards' descriptions for this script. "\
+    #       "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
+    #         "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
+    #     "add the hole result as dictionary, like this:"\
+    #     "{'script': 'the generated script', 'storyboards':{'1':'scene: script part, description: generated storyboard 1','2':'scene: script part, description: generated storyboard 2', ...}} "\
+    #     " and without any additional characters "\
+    #     "don't add \n at the end of result, the result should begine and end like this {} "\
+    #     "the result should be exactly like this"\
+    #     "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' "
+    
+    prompt = f"You are an expert scriptwriter and storyboard artist.
+    Generate a script in the style of {script_style} for a video lasting {video_duration} inspired by the following synopsis: {synopsis}.\n"
+    "After generating the script generate the visual and textual descriptions for each scene's storyboard.\n"
+    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"
+    "adn in Textual Description provide a concise summary of the story's key moments.\n"
+    "like this:\n"
+    "'Storyboard Number': {'VisualDescription': 'all visual descriptions', 'TextualDescription': ' provide the Textual Description' "
+    "the result will be dictionary of dictionaries, like this:\n"
+    "{'script':'generated script', 'storyboards':{'1':{'VisualDescription': 'visual_descriptions1', 'TextualDescription': 'Textual Description1'},'2':{'VisualDescription': 'visual_descriptions2', 'TextualDescription': 'Textual Description2'}, ...}}"
+    "don't add anything else to the response, return the response exactly as the example.\n"
+    
     try:
         retry = 0
         error = None
@@ -203,16 +215,28 @@ def generate_storyboard(data, db_session, for_consumer=False,retries=0):
     openai_key = os.getenv('OPENAI_SECRET_KEY')
 
     client = OpenAI(api_key=openai_key)
-    prompt = f"As a professional storyboard artist\director Generate the storyboards' descriptions with different camera angles & sizes suitable for each scene for the following script.\n"\
-        "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
-            "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
-        "return the hole result as dictionary, like this:"\
-        "{'storyboards':{'1':'scene: script part, description: generated storyboard 1','2':'scene: script part, description: generated storyboard 2', ...}} "\
-        " and without any additional characters "\
-        "don't add \n at the end of result, the result should begine and end like this {} "\
-        "the result should be exactly like this"\
-        "'{\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' \n"\
-        f"this is the script: {script}."
+    # prompt = f"As a professional storyboard artist\director Generate the storyboards' descriptions with different camera angles & sizes suitable for each scene for the following script.\n"\
+    #     "and add the scene of the script (the script part) which the storyboard was generated for, like this:"\
+    #         "'Storyboard Number': 'scene: script part, description: generated storyboard description.' "\
+    #     "return the hole result as dictionary, like this:"\
+    #     "{'storyboards':{'1':'scene: script part, description: generated storyboard 1','2':'scene: script part, description: generated storyboard 2', ...}} "\
+    #     " and without any additional characters "\
+    #     "don't add \n at the end of result, the result should begine and end like this {} "\
+    #     "the result should be exactly like this"\
+    #     "'{\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' \n"\
+    #     f"this is the script: {script}."
+
+    prompt = f"You are an expert scriptwriter and storyboard artist. Based on the following script, 
+    generate visual and textual descriptions for each scene's storyboard.\n"
+    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"
+    "adn in Textual Description provide a concise summary of the story's key moments.\n"
+    "like this:\n"
+    "'Storyboard Number': {'VisualDescription': 'all visual descriptions', 'TextualDescription': ' provide the Textual Description' "
+    "the result will be dictionary of dictionaries, like this:\n"
+    "{'storyboards':{'1':{'VisualDescription': 'visual_descriptions1', 'TextualDescription': 'Textual Description1'},'2':{'VisualDescription': 'visual_descriptions2', 'TextualDescription': 'Textual Description2'}, ...}}"
+    "don't add anything else to the response, return the response exactly as the example.\n"
+    f"this is the script: {script}."
+
     try:
         retry = 0
         error = None
