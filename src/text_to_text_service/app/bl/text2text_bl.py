@@ -125,15 +125,15 @@ def generate_script(data, db_session, for_consumer=False, retries=0):
     #     "the result should be exactly like this"\
     #     "'{\"script\":\"generated script\",\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' "
     
-    prompt = f"You are an expert scriptwriter and storyboard artist."
-    "Generate a script in the style of {script_style} for a video lasting {video_duration} inspired by the following synopsis: {synopsis}.\n"
-    "After generating the script generate the visual and textual descriptions for each scene's storyboard.\n"
-    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"
-    "adn in Textual Description provide a concise summary of the story's key moments.\n"
-    "like this:\n"
-    "'Storyboard Number': {'VisualDescription': 'all visual descriptions', 'TextualDescription': ' provide the Textual Description' "
-    "the result will be dictionary of dictionaries, like this:\n"
-    "{'script':'generated script', 'storyboards':{'1':{'VisualDescription': 'visual_descriptions1', 'TextualDescription': 'Textual Description1'},'2':{'VisualDescription': 'visual_descriptions2', 'TextualDescription': 'Textual Description2'}, ...}}"
+    prompt = f"You are an expert scriptwriter and storyboard artist."\
+    "Generate a script in the style of {script_style} for a video lasting {video_duration} inspired by the following synopsis: {synopsis}.\n"\
+    "After generating the script generate the visual and textual descriptions for each scene's storyboard.\n"\
+    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"\
+    "adn in Textual Description provide a concise summary of the story's key moments.\n"\
+    "like this:\n"\
+    "'Storyboard Number': {'VisualDescription': 'all visual descriptions', 'TextualDescription': ' provide the Textual Description' "\
+    "the result will be dictionary of dictionaries, like this:\n"\
+    "{'script':'generated script', 'storyboards':{'1':{'VisualDescription': 'visual_descriptions1', 'TextualDescription': 'Textual Description1'},'2':{'VisualDescription': 'visual_descriptions2', 'TextualDescription': 'Textual Description2'}, ...}}"\
     "don't add anything else to the response, return the response exactly as the example.\n"
     
     try:
@@ -226,15 +226,15 @@ def generate_storyboard(data, db_session, for_consumer=False,retries=0):
     #     "'{\"storyboards\":{\"1\":\"scene: script part, description: generated storyboard 1\",\"2\":\"scene: script part, description: generated storyboard 2\", ...}}' \n"\
     #     f"this is the script: {script}."
 
-    prompt = f"You are an expert scriptwriter and storyboard artist. Based on the following script," 
-    "generate visual and textual descriptions for each scene's storyboard.\n"
-    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"
-    "adn in Textual Description provide a concise summary of the story's key moments.\n"
-    "like this:\n"
-    "'Storyboard Number': {'VisualDescription': 'all visual descriptions', 'TextualDescription': ' provide the Textual Description' "
-    "the result will be dictionary of dictionaries, like this:\n"
-    "{'storyboards':{'1':{'VisualDescription': 'visual_descriptions1', 'TextualDescription': 'Textual Description1'},'2':{'VisualDescription': 'visual_descriptions2', 'TextualDescription': 'Textual Description2'}, ...}}"
-    "don't add anything else to the response, return the response exactly as the example.\n"
+    prompt = f"You are an expert scriptwriter and storyboard artist. Based on the following script," \
+    "generate visual and textual descriptions for each scene's storyboard.\n"\
+    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"\
+    "adn in Textual Description provide a concise summary of the story's key moments.\n"\
+    "like this:\n"\
+    "'Storyboard Number': {'VisualDescription': 'all visual descriptions', 'TextualDescription': ' provide the Textual Description' "\
+    "the result will be dictionary of dictionaries, like this:\n"\
+    "{'storyboards':{'1':{'VisualDescription': 'visual_descriptions1', 'TextualDescription': 'Textual Description1'},'2':{'VisualDescription': 'visual_descriptions2', 'TextualDescription': 'Textual Description2'}, ...}}"\
+    "don't add anything else to the response, return the response exactly as the example.\n"\
     f"this is the script: {script}."
 
     try:
