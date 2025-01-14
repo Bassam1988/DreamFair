@@ -127,8 +127,8 @@ def generate_script(data, db_session, for_consumer=False, retries=0):
     
     prompt = f"You are an expert scriptwriter and storyboard artist."\
     f"Generate a script in the style of {script_style} for a video lasting {video_duration} inspired by the following synopsis: {synopsis}.\n"\
-    "After generating the script generate the visual and textual descriptions for each scene's storyboard.\n"\
-    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"\
+    "After generating the script generate the visual and textual descriptions for each scene and cut of storyboard.\n"\
+    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings and camera size & angle.\n"\
     "adn in Textual Description provide a concise summary of the story's key moments.\n"\
     "like this:\n"\
     "\"Storyboard Number\": {\"VisualDescription\": \"all visual descriptions\", \"TextualDescription\": \"provide the Textual Description\"} "\
@@ -227,8 +227,8 @@ def generate_storyboard(data, db_session, for_consumer=False,retries=0):
     #     f"this is the script: {script}."
 
     prompt = f"You are an expert scriptwriter and storyboard artist. Based on the following script," \
-    "generate visual and textual descriptions for each scene's storyboard.\n"\
-    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings.\n"\
+    "generate visual and textual descriptions for each scene and cut of storyboard.\n"\
+    "where in Visual Description describe the visuals summarizing the entire story, including key characters, actions, and settings and camera size & angle.\n"\
     "adn in Textual Description provide a concise summary of the story's key moments.\n"\
     "like this:\n"\
     "\"Storyboard Number\": {\"VisualDescription\": \"all visual descriptions\", \"TextualDescription\": \"provide the Textual Description\"} "\
