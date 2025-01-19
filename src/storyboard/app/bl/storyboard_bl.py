@@ -88,6 +88,32 @@ def update_project_by_id(user_id, project_id, update_data):
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
 
+def delete_storyboards_by_project_id(user_id, project_id):
+    try:
+        project_storyboards = db_session.query(Storyboard).join(Project).\
+            filter(Storyboard.project_id == project_id, Project.user_id == user_id).\
+            options(joinedload(Storyboard.project)).all()
+        if project_storyboards:
+            for storyboard in project_storyboards:
+                if storyboard.image:
+                    os.remove(storyboard.image)        
+                db_session.delete(storyboard)
+            db_session.commit()
+            return True
+        return True
+    except:
+        return False
+
+def delete_project_by_id(user_id, project_id):
+    project = Project.query.get(project_id)
+    if project and str(project.user_id) == user_id:
+        if delete_storyboards_by_project_id(user_id, project_id):
+            db_session.delete(project)
+            db_session.commit()
+            data = {'message':"Project with name: "+project.name+" deleted"}
+            return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}
+
 
 def get_all_script_styles():
     script_style_schema = ScriptStyleSchema()

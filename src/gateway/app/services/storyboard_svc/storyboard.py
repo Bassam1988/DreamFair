@@ -38,6 +38,20 @@ def get_storyboard_user_project_by_id(request, project_id):
     return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
 
 
+def delete_storyboard_user_project_by_id(request, project_id):
+    token = request.headers.get('Authorization')
+
+    if not token:
+        raise Exception('missing credentails!')
+
+    response = requests.delete(
+        f"{main_url}/storyboard/delete_project/{str(project_id)}",
+        headers={"Authorization": token}
+
+    )
+    response_result = response.json()
+    return response_result['data'], response_result['message'], response_result['succeeded'], response.status_code
+
 def sb_create_project(request, data):
     token = request.headers.get('Authorization')
 
