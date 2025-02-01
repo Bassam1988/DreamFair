@@ -206,7 +206,6 @@ def create_project_history(project):
                  'storyboard_style_id': data.pop('storyboard_style')['id'] if data['storyboard_style'] != None else None,
                  'video_duration_id': data.pop('video_duration')['id'] if data['video_duration'] != None else None,
                  'aspect_ratio_id': data.pop('aspect_ratio')['id'] if data['aspect_ratio'] != None else None,
-                 'boards_per_min_id': data.pop('boards_per_min')['id'] if data['boards_per_min'] != None else None,
                  })
     project_h_schema = ProjectHistorySchema()
     errors = project_h_schema.validate(data)
