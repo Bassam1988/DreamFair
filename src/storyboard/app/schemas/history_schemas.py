@@ -42,9 +42,6 @@ class ProjectHistoryListSchema(Schema):
     aspect_ratio_id = fields.UUID(load_only=True)
     aspect_ratio = fields.Nested(AspectRatioSchema, dump_only=True)
 
-    boards_per_min_id = fields.UUID(load_only=True)
-    boards_per_min = fields.Nested(BoardsPerMinSchema, dump_only=True)
-
     storyboards_history = fields.Nested(
         StoryboardHistoryProjectHistorySchema, many=True, dump_only=True)  # type: ignore
 

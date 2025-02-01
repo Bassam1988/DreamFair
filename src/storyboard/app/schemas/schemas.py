@@ -81,9 +81,6 @@ class ProjectSchema(Schema):
     aspect_ratio_id = fields.UUID(load_only=True)
     aspect_ratio = fields.Nested(AspectRatioSchema, dump_only=True)
 
-    boards_per_min_id = fields.UUID(load_only=True)
-    boards_per_min = fields.Nested(BoardsPerMinSchema, dump_only=True)
-
     storyboards = fields.Nested(
         StoryboardProjectSchema, many=True, dump_only=True)  # type: ignore
 
