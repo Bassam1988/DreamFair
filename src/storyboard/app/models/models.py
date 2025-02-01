@@ -14,6 +14,8 @@ class ScriptStyle(Base):
     name = Column(String(50), unique=True)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="script_style")
+    project_history = relationship(
+        "ProjectHistory", back_populates="script_style")
 
 
 class StoryBoardStyle(Base):
@@ -23,6 +25,8 @@ class StoryBoardStyle(Base):
     description = Column(String(150), unique=False)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="storyboard_style")
+    project_history = relationship(
+        "ProjectHistory", back_populates="storyboard_style")
 
 
 class VideoDuration(Base):
@@ -31,6 +35,8 @@ class VideoDuration(Base):
     name = Column(String(50), unique=True)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="video_duration")
+    project_history = relationship(
+        "ProjectHistory", back_populates="video_duration")
 
 
 class AspectRatio(Base):
@@ -39,6 +45,8 @@ class AspectRatio(Base):
     name = Column(String(50), unique=True)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="aspect_ratio")
+    project_history = relationship(
+        "ProjectHistory", back_populates="aspect_ratio")
 
 
 class BoardsPerMin(Base):
@@ -48,6 +56,8 @@ class BoardsPerMin(Base):
     count = Column(Integer, unique=True)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="boards_per_min")
+    project_history = relationship(
+        "ProjectHistory", back_populates="boards_per_min")
 
 
 class Status(Base):
@@ -56,6 +66,7 @@ class Status(Base):
     name = Column(String(50), unique=True)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="status")
+    project_history = relationship("ProjectHistory", back_populates="status")
 
 
 class Project(Base):
@@ -92,6 +103,8 @@ class Project(Base):
     boards_per_min = relationship(
         "BoardsPerMin", back_populates="projects")
     storyboards = relationship("Storyboard", back_populates="project")
+
+    project_history = relationship("ProjectHistory", back_populates="project")
     created_date = Column(DateTime, default=func.now())
 
 
@@ -100,6 +113,60 @@ class Storyboard(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     project_id = Column(UUID, ForeignKey('projects.id'), nullable=False)
     project = relationship("Project", back_populates="storyboards")
+    name = Column(String(150))
+    image = Column(String(25000))
+    scene_description = Column(String(25000))
+    order = Column(Integer)
+    created_date = Column(DateTime, default=func.now())
+
+
+class ProjectHistory(Base):
+    __tablename__ = 'projects_history'
+
+    # Use UUID as primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID, ForeignKey('projects.id'), nullable=False)
+    project = relationship(
+        "Project", back_populates="project_history")
+    name = Column(String(150))
+    synopsis = Column(String(2500), nullable=True)
+    script = Column(String(25000), nullable=True)
+    status_id = Column(UUID, ForeignKey(
+        'status.id'), nullable=True)
+    status = relationship(
+        "Status", back_populates="project_history")
+    script_style_id = Column(UUID, ForeignKey(
+        'script_styles.id'), nullable=True)
+    script_style = relationship(
+        "ScriptStyle", back_populates="project_history")
+    storyboard_style_id = Column(UUID, ForeignKey(
+        'storyboard_styles.id'), nullable=True)
+    storyboard_style = relationship(
+        "StoryBoardStyle", back_populates="project_history")
+    video_duration_id = Column(UUID, ForeignKey(
+        'video_durations.id'), nullable=True)
+    video_duration = relationship(
+        "VideoDuration", back_populates="project_history")
+    aspect_ratio_id = Column(UUID, ForeignKey(
+        'aspect_ratios.id'), nullable=True)
+    aspect_ratio = relationship(
+        "AspectRatio", back_populates="project_history")
+    boards_per_min_id = Column(UUID, ForeignKey(
+        'boards_per_mins.id'), nullable=True)
+    boards_per_min = relationship(
+        "BoardsPerMin", back_populates="project_history")
+    storyboards_history = relationship(
+        "StoryboardHistory", back_populates="projects_history")
+    created_date = Column(DateTime, default=func.now())
+
+
+class StoryboardHistory(Base):
+    __tablename__ = 'storyboards_history'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    projects_history_id = Column(UUID, ForeignKey(
+        'projects_history.id'), nullable=False)
+    projects_history = relationship(
+        "ProjectHistory", back_populates="storyboards_history")
     name = Column(String(150))
     image = Column(String(25000))
     scene_description = Column(String(25000))

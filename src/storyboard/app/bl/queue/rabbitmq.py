@@ -46,7 +46,7 @@ class RabbitMQ():
             )
         # ConnectionClosed:#StreamLostError
         except pika.exceptions.ConnectionWrongStateError:
-            print("connection error")
+            print("connection error1")
             self.re_init_connection()
             self.send_message(routing_key, message)
         except Exception as e:
@@ -55,7 +55,8 @@ class RabbitMQ():
 
     def create_callback(self, process_func, db_session, socket=None):
         def callback(ch, method, properties, body):
-            err = process_func(body, db_session, for_consumer=True, socket=socket)
+            err = process_func(
+                body, db_session, for_consumer=True, socket=socket)
             if err:
                 ch.basic_nack(delivery_tag=method.delivery_tag)
             else:

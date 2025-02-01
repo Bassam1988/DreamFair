@@ -1,7 +1,11 @@
+import shutil
+import copy
 import json
+
+from ..schemas.history_schemas import ProjectHistoryListSchema, ProjectHistorySchema, StoryboardHistoryCreateSchema
 from ..database import db_session
 from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, T2IOperationErrorSchema, T2TOperationErrorSchema, VideoDurationSchema
-from ..models.models import AspectRatio, BoardsPerMin, Project, ScriptStyle, Status, StoryBoardStyle, Storyboard, T2IOperationErrors, T2TOperationErrors, VideoDuration
+from ..models.models import AspectRatio, BoardsPerMin, Project, ProjectHistory, ScriptStyle, Status, StoryBoardStyle, Storyboard, StoryboardHistory, T2IOperationErrors, T2TOperationErrors, VideoDuration
 from .queue.rabbitmq import RabbitMQ
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
@@ -36,7 +40,8 @@ text_to_image_queue = RabbitMQ(
 
 def get_all_projects(user_id):
     project_schema = ProjectSchema()
-    projects = Project.query.filter_by(user_id=user_id).order_by(Project.created_date.desc()).all()
+    projects = Project.query.filter_by(user_id=user_id).order_by(
+        Project.created_date.desc()).all()
     data = project_schema.dump(projects, many=True)
     return {'data': data, 'status': 200}
 
@@ -49,6 +54,29 @@ def get_project_by_id(user_id, project_id):
             Storyboard.project_id == project.id
         ).order_by(Storyboard.order).all()
         data = project_schema.dump(project)
+        return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}
+
+
+def get_all_project_histories(user_id, project_id):
+    project_history_schema = ProjectHistoryListSchema()
+
+    project_histories = db_session.query(ProjectHistory).join(Project).\
+        filter(ProjectHistory.project_id == project_id, Project.user_id == user_id).\
+        options(joinedload(ProjectHistory.project)).all()
+
+    data = project_history_schema.dump(project_histories, many=True)
+    return {'data': data, 'status': 200}
+
+
+def get_project_h_by_id(user_id, project_h_id):
+    project_h_schema = ProjectHistorySchema()
+    project_h = ProjectHistory.query.get(project_h_id)
+    if project_h and str(project_h.project.user_id) == user_id:
+        project_h.storyboards_history = db_session.query(StoryboardHistory).filter(
+            StoryboardHistory.projects_history_id == project_h.id
+        ).order_by(StoryboardHistory.order).all()
+        data = project_h_schema.dump(project_h)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
 
@@ -76,17 +104,175 @@ def create_project_bl(data, user_id):
     return {'data': {'project': project_schema.dump(project)}, 'safe': False, 'status': 201}
 
 
+def revert_moved_images(moved_paths):
+    """
+    moved_paths is a list of tuples: [(original_path, new_path), ...]
+    Move each file back from new_path to original_path.
+    Ignore FileNotFoundError (already missing).
+    """
+    # It's often safer to revert in reverse order (last moved -> first undone).
+    # But if order doesn't matter for your scenario, a normal loop is also fine.
+    for original_path, new_path in reversed(moved_paths):
+        if new_path and original_path:
+            try:
+                shutil.move(new_path, original_path)
+            except FileNotFoundError:
+                # If it's missing, skip silently or log it
+                print(f"Revert warning: {new_path} not found.")
+            except Exception as e:
+                print(f"Error reverting {new_path} -> {original_path}: {e}")
+
+
+def move_image_to_history_folder(old_image_path, p_h_id):
+    """
+    Move an image file from its current folder into a `history` subfolder 
+    located in the same parent directory. For example:
+
+        If old_image_path = "/images/projects/0021/img1.jpg",
+        then new_image_path = "/images/projects/0021/history/img1.jpg".
+
+    Returns the new image path.
+    """
+    if not old_image_path:
+        return None
+
+    # Extract the directory and filename
+    # e.g. ("/images/projects/0021", "img1.jpg")
+    directory, filename = os.path.split(old_image_path)
+
+    # Create the 'history' subfolder if it does not exist
+    # e.g. "/images/projects/0021/history"
+    history_folder = os.path.join(directory, "history", str(p_h_id))
+    if not os.path.exists(history_folder):
+        os.makedirs(history_folder)
+
+    # Build the new path inside the 'history' folder
+    new_image_path = os.path.join(history_folder, filename)
+
+    # Move the file
+    try:
+        shutil.move(old_image_path, new_image_path)
+    except FileNotFoundError:
+        # If the file doesn't exist, decide how you want to handle it
+        # (e.g., log a warning, raise an exception, skip quietly, etc.)
+        print(f"Warning: File not found: {old_image_path}")
+        return None
+
+    return new_image_path
+
+
+def create_storyboard_history(project_h_id, project_storyboards):
+    project_storyboard_schema = StoryboardHistoryCreateSchema()
+
+    history_data = []
+    pathes = []
+    try:
+        data = project_storyboard_schema.dump(
+            project_storyboards, many=True)
+        for item in data:
+            # new_path = move_image_to_history_folder(
+            #     item["image"], project_h_id)
+            # pathes.append((new_path, item["image"]))
+            history_data.append(
+                {
+                    "name": item["name"],
+                    "image": item["image"],
+                    "order": item["order"],
+                    "scene_description": item["scene_description"],
+                    "projects_history_id": project_h_id,
+
+                }
+
+            )
+
+    # Perform bulk insert into storyboard_history table
+        db_session.bulk_insert_mappings(StoryboardHistory, history_data)
+
+    except:
+        if pathes:
+            # revert_moved_images(pathes)
+            pass
+
+
+def create_project_history(project):
+    project_schema = ProjectSchema()
+    data = project_schema.dump(project)
+    data.pop('created_date')
+    data.pop('storyboards')
+    project_id = data.pop('id', None)
+    data.update({'project_id': project_id,
+                 'script_style_id': data.pop('script_style')['id'] if data['script_style'] != None else None,
+                 'status_id': data.pop('status')['id'],
+                 'storyboard_style_id': data.pop('storyboard_style')['id'] if data['storyboard_style'] != None else None,
+                 'video_duration_id': data.pop('video_duration')['id'] if data['video_duration'] != None else None,
+                 'aspect_ratio_id': data.pop('aspect_ratio')['id'] if data['aspect_ratio'] != None else None,
+                 'boards_per_min_id': data.pop('boards_per_min')['id'] if data['boards_per_min'] != None else None,
+                 })
+    project_h_schema = ProjectHistorySchema()
+    errors = project_h_schema.validate(data)
+    if errors:
+        raise Exception({'errors': errors, 'status': 400})
+    project_h = ProjectHistory(
+        **data
+    )
+
+    db_session.add(project_h)
+    db_session.flush()
+    return project_h.id
+
+
 def update_project_by_id(user_id, project_id, update_data):
+    history_all = ['script', 'synopsis', 'script_style_id',
+                   'video_duration_id', 'storyboard_style_id', 'aspect_ratio_id']
+    history_fields_script_and_storyboard = [
+        'synopsis', 'script_style_id', 'video_duration_id']
+    history_fields_storyboard = ['script', ]
+    history_fields_storyboard_images = [
+        'storyboard_style_id', 'aspect_ratio_id']
     project = Project.query.get(project_id)
+    project_copy = copy.copy(project)
+    create_history = False
+    delete_storyboard = False
+    delete_script = False
+    delete_image = False
     if project and str(project.user_id) == user_id:
         for key, value in update_data.items():
             setattr(project, key, value)
+            if key in history_all:
+                create_history = True
+                if key in history_fields_script_and_storyboard:
+                    delete_script = True
+                    delete_storyboard = True
+                if key in history_fields_storyboard:
+                    delete_storyboard = True
+                if key in history_fields_storyboard_images:
+                    delete_image = True
+
+        if create_history:
+            project_h_id = create_project_history(project_copy)
+
+            project_storyboards = db_session.query(Storyboard).filter(
+                Storyboard.project_id == project_id).all()
+            if project_storyboards:
+                create_storyboard_history(project_h_id, project_storyboards)
+                if delete_script:
+                    setattr(project, 'script', "")
+                    db_session.query(Storyboard).filter(
+                        Storyboard.project_id == project_id).delete()
+                if not delete_script:
+                    if delete_storyboard:
+                        db_session.query(Storyboard).filter(
+                            Storyboard.project_id == project_id).delete()
+                    elif delete_image:
+                        for storyboard in project_storyboards:
+                            storyboard.image = None
 
         db_session.commit()
         project_schema = ProjectSchema()
         data = project_schema.dump(project)
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
+
 
 def delete_storyboards_by_project_id(user_id, project_id):
     try:
@@ -95,8 +281,7 @@ def delete_storyboards_by_project_id(user_id, project_id):
             options(joinedload(Storyboard.project)).all()
         if project_storyboards:
             for storyboard in project_storyboards:
-                if storyboard.image:
-                    os.remove(storyboard.image)        
+
                 db_session.delete(storyboard)
             db_session.commit()
             return True
@@ -104,14 +289,21 @@ def delete_storyboards_by_project_id(user_id, project_id):
     except:
         return False
 
+
 def delete_project_by_id(user_id, project_id):
     project = Project.query.get(project_id)
     if project and str(project.user_id) == user_id:
-        if delete_storyboards_by_project_id(user_id, project_id):
-            db_session.delete(project)
-            db_session.commit()
-            data = {'message':"Project with name: "+project.name+" deleted"}
-            return {'data': data, 'status': 200}
+
+        db_session.query(Storyboard).filter(
+            Storyboard.project_id == project_id).delete()
+        media_folder = os.getenv('MEDIA_FOLDER')
+        project_folder = os.path.join(media_folder, str(project.id))
+        shutil.rmtree(project_folder)
+
+        db_session.delete(project)
+        db_session.commit()
+        data = {'message': "Project with name: "+project.name+" deleted"}
+        return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
 
 
@@ -161,94 +353,107 @@ def get_project_storyboard_bl(user_id, project_id):
     return {'message': 'No data found', 'status': 404}
 
 
-def generate_storyboard_description(user_id, project_id, source,tries=0):
-    try_count=tries+1
+def generate_storyboard_description(user_id, project_id, source, tries=0):
+    try_count = tries+1
     try:
         project = Project.query.get(project_id)
         if project and str(project.user_id) == user_id:
-            if source==1:
+            if source == 1:
                 return generate_storyboards_by_synopsis(project)
-            if source==2:
+            if source == 2:
                 return generate_storyboards_by_script(project)
         return {'message': 'No data found', 'status': 404}
     except Exception as e:
-                  
-        if try_count<4:
-            generate_storyboard_description(user_id, project_id, source,try_count)
+
+        if try_count < 4:
+            generate_storyboard_description(
+                user_id, project_id, source, try_count)
         else:
             raise e
-             
+
 
 def generate_storyboards_by_synopsis(project):
-        project_schema = ProjectSchema()
-        synopsis = project.synopsis
-        if synopsis == None or synopsis=="":
-            return {'message': 'Synopsis is mandatory', 'status': 400}
-        reference = str(project.id)
-        script_style = project.script_style
-        if script_style:
-            script_style_name = script_style.name
-        else:
-            return {'message': 'Script Style is mandatory', 'status': 400}
+    project_schema = ProjectSchema()
+    synopsis = project.synopsis
+    if synopsis == None or synopsis == "":
+        return {'message': 'Synopsis is mandatory', 'status': 400}
+    reference = str(project.id)
+    script_style = project.script_style
+    if script_style:
+        script_style_name = script_style.name
+    else:
+        return {'message': 'Script Style is mandatory', 'status': 400}
 
-        video_duration = project.video_duration
-        if video_duration:
-            video_duration_name = video_duration.name
-        else:
-            return {'message': 'Video duration is mandatory', 'status': 400}
-        message = {
-            "reference": reference,
-            "synopsis": synopsis,
-            "script_style": script_style_name,
-            "video_duration": video_duration_name,
-            "source":1
-        }
-        text_to_text_queue.send_message(
-            message=message, routing_key=t_queue)
+    video_duration = project.video_duration
+    if video_duration:
+        video_duration_name = video_duration.name
+    else:
+        return {'message': 'Video duration is mandatory', 'status': 400}
+    message = {
+        "reference": reference,
+        "synopsis": synopsis,
+        "script_style": script_style_name,
+        "video_duration": video_duration_name,
+        "source": 1
+    }
+    text_to_text_queue.send_message(
+        message=message, routing_key=t_queue)
+    try:
         project.status = Status.query.filter(
             Status.code_name == 'GeSc').first()
         db_session.commit()
-        data = project_schema.dump(project)
-        return {'data': data, 'status': 200}
-    
+    except Exception as e:
+        print("error: " + str(e))
+        project.status = Status.query.filter(
+            Status.code_name == 'GeSc').first()
+        db_session.commit()
+    data = project_schema.dump(project)
+    return {'data': data, 'status': 200}
 
 
 def generate_storyboards_by_script(project):
-        project_schema = ProjectSchema()    
-        script = project.script
-        if script == None or script=="":
-            return {'message': 'Script is mandatory', 'status': 400}
-        reference = str(project.id)
-        script_style = project.script_style
-        if script_style:
-            script_style_name = script_style.name
-        else:
-            return {'message': 'Script Style is mandatory', 'status': 400}
+    project_schema = ProjectSchema()
+    script = project.script
+    if script == None or script == "":
+        return {'message': 'Script is mandatory', 'status': 400}
+    reference = str(project.id)
+    script_style = project.script_style
+    if script_style:
+        script_style_name = script_style.name
+    else:
+        return {'message': 'Script Style is mandatory', 'status': 400}
 
-        video_duration = project.video_duration
-        if video_duration:
-            video_duration_name = video_duration.name
-        else:
-            return {'message': 'Video duration is mandatory', 'status': 400}
-        message = {
-            "reference": reference,
-            "script": script,
-            "script_style": script_style_name,
-            "video_duration": video_duration_name,
-            "source":2
-        }
-        text_to_text_queue.send_message(
-            message=message, routing_key=t_queue)
+    video_duration = project.video_duration
+    if video_duration:
+        video_duration_name = video_duration.name
+    else:
+        return {'message': 'Video duration is mandatory', 'status': 400}
+    message = {
+        "reference": reference,
+        "script": script,
+        "script_style": script_style_name,
+        "video_duration": video_duration_name,
+        "source": 2
+    }
+    text_to_text_queue.send_message(
+        message=message, routing_key=t_queue)
+
+    try:
         project.status = Status.query.filter(
             Status.code_name == 'GeSc').first()
         db_session.commit()
-        data = project_schema.dump(project)
-        return {'data': data, 'status': 200}
-    
+    except Exception as e:
+        print("error: " + str(e))
+        project.status = Status.query.filter(
+            Status.code_name == 'GeSc').first()
+        db_session.commit()
+
+    data = project_schema.dump(project)
+    return {'data': data, 'status': 200}
 
 
-def send_script(user_id, project_id,tries=0):
-    try_count=tries+1
+def send_script(user_id, project_id, tries=0):
+    try_count = tries+1
     try:
         project_schema = ProjectSchema()
         project = Project.query.get(project_id)
@@ -256,10 +461,10 @@ def send_script(user_id, project_id,tries=0):
 
             reference = str(project.id)
 
-            orginal_script = project.script            
+            orginal_script = project.script
 
             prompts = {prompt.order: prompt.scene_description
-                    for prompt in project.storyboards}
+                       for prompt in project.storyboards}
 
             aspect_ratio = project.aspect_ratio
             if aspect_ratio:
@@ -267,11 +472,11 @@ def send_script(user_id, project_id,tries=0):
             else:
                 return {'message': 'Aspect ratio is mandatory', 'status': 400}
 
-            boards_per_min = project.boards_per_min
-            if boards_per_min:
-                boards_per_min_count = boards_per_min.count
-            else:
-                return {'message': 'Boards per min is mandatory', 'status': 400}
+            # boards_per_min = project.boards_per_min
+            # if boards_per_min:
+            #     boards_per_min_count = boards_per_min.count
+            # else:
+            #     return {'message': 'Boards per min is mandatory', 'status': 400}
 
             storyboard_style = project.storyboard_style
             if storyboard_style:
@@ -285,7 +490,7 @@ def send_script(user_id, project_id,tries=0):
                 "prompts": prompts,
                 "aspect_ratio": aspect_ratio_name,
                 "storyboard_style": storyboard_style_name,
-                "source":1
+                "source": 1
             }
             text_to_image_queue.send_message(
                 message=message, routing_key=m_queue)
@@ -296,24 +501,25 @@ def send_script(user_id, project_id,tries=0):
             return {'data': data, 'status': 200}
         return {'message': 'No data found', 'status': 404}
     except Exception as e:
-        if try_count<4:
-            send_script(user_id, project_id,try_count)            
+        if try_count < 4:
+            send_script(user_id, project_id, try_count)
         else:
             raise e
 
 
-def update_regenerate_storyboard(user_id, storyboard_id,scene_description,tries=0):
-    try_count=tries+1
+def update_regenerate_storyboard(user_id, storyboard_id, scene_description, tries=0):
+    try_count = tries+1
     try:
         project_schema = ProjectSchema()
-        storyboard = Storyboard.query.get(storyboard_id)
+        storyboard_query = Storyboard.query.filter(storyboard_id)
+        storyboard = storyboard_query[0]
         project = storyboard.project
         if project and str(project.user_id) == user_id:
 
-            reference = str(storyboard.id)            
+            reference = str(storyboard.id)
 
             orginal_script = project.script
-            storyboard.scene_description=scene_description
+            storyboard.scene_description = scene_description
             prompts = {storyboard.order: scene_description}
 
             aspect_ratio = project.aspect_ratio
@@ -321,10 +527,11 @@ def update_regenerate_storyboard(user_id, storyboard_id,scene_description,tries=
                 aspect_ratio_name = aspect_ratio.name
             else:
                 return {'message': 'Aspect ratio is mandatory', 'status': 400}
-            
+
             storyboard_style = project.storyboard_style
             if storyboard_style:
-                storyboard_style_name = storyboard_style.name + f" ({storyboard_style.description}) "
+                storyboard_style_name = storyboard_style.name + \
+                    f" ({storyboard_style.description}) "
             else:
                 return {'message': 'Storyboard tyle is mandatory', 'status': 400}
 
@@ -345,11 +552,11 @@ def update_regenerate_storyboard(user_id, storyboard_id,scene_description,tries=
             return {'data': data, 'status': 200}
         return {'message': 'No data found', 'status': 404}
     except Exception as e:
-        if try_count<4:
-            update_regenerate_storyboard(user_id, storyboard_id,scene_description,try_count)       
+        if try_count < 4:
+            update_regenerate_storyboard(
+                user_id, storyboard_id, scene_description, try_count)
         else:
             raise e
-    
 
 
 def t2t_insert_error(reference, error, message, db_session):
@@ -373,26 +580,28 @@ def t2t_error_processing(reference, error, message, db_session):
     except Exception as e:
         pass
 
+
 def on_emit_acknowledgment(response):
     print("Server acknowledgment:", response)
 
+
 def set_scribt_storyboard_desc(data, db_session, for_consumer=True, socket=None):
     dict_data = json.loads(data)
-    source=dict_data['source']
-    if source==1:
-        set_scribt_and_storyboard_desc(dict_data,db_session,for_consumer)
-    if source==2:
-         set_storyboard_desc(dict_data, db_session, for_consumer=True)
+    source = dict_data['source']
+    if source == 1:
+        set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer)
+    if source == 2:
+        set_storyboard_desc(dict_data, db_session, for_consumer=True)
     ref = dict_data['reference']
     socket.emit('project_status_updated', {
-                    'project_id': ref,                    
-                    'message': 'Project status updated'
-                })
-    
+        'project_id': ref,
+        'message': 'Project status updated'
+    })
+
 
 def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
     try:
-        
+
         storyboards_list = []
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
@@ -426,13 +635,13 @@ def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
                 db_session.commit()
                 return
             else:
-                
+
                 error = dict_data['e_message']
                 raise Exception(error)
         return "error"
     except Exception as e:
         project.status = Status.query.filter(
-                    Status.code_name == 'Wa').first()
+            Status.code_name == 'Wa').first()
         db_session.commit()
         if for_consumer:
             # insert in error table
@@ -441,23 +650,23 @@ def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
             return
         else:
             raise e
-        
+
 
 def set_storyboard_desc(dict_data, db_session, for_consumer=True):
     try:
-        
+
         storyboards_list = []
         project_id = dict_data['reference']
         project = Project.query.get(project_id)
         success = dict_data['success']
-        #project_script = dict_data.get('script', None)
+        # project_script = dict_data.get('script', None)
         if project:
             if success == 1:
                 db_session.query(Storyboard).filter(
                     Storyboard.project_id == project.id).delete()
                 storyboards = dict_data['storyboards']
 
-                #project.script = project_script
+                # project.script = project_script
                 for key, value in storyboards.items():
                     storyboard_data = {
                         'project_id': project.id,
@@ -479,13 +688,13 @@ def set_storyboard_desc(dict_data, db_session, for_consumer=True):
                 db_session.commit()
                 return
             else:
-                
+
                 error = dict_data['e_message']
                 raise Exception(error)
         return "error"
     except Exception as e:
         project.status = Status.query.filter(
-                    Status.code_name == 'Wa').first()
+            Status.code_name == 'Wa').first()
         db_session.commit()
         if for_consumer:
             # insert in error table
@@ -494,7 +703,6 @@ def set_storyboard_desc(dict_data, db_session, for_consumer=True):
             return
         else:
             raise e
-
 
 
 def t2i_insert_error(reference, error, message, db_session):
@@ -518,13 +726,15 @@ def t2i_error_processing(reference, error, message, db_session):
     except Exception as e:
         pass
 
+
 def set_storyboard_image(data, db_session, for_consumer=True, socket=None):
     dict_data = json.loads(data)
-    source=dict_data["source"]
-    if source==1:
+    source = dict_data["source"]
+    if source == 1:
         return set_scribt_storyboard_images(dict_data, db_session, for_consumer, socket)
-    if source==2:
+    if source == 2:
         return update_storyboard_image(dict_data, db_session, for_consumer, socket)
+
 
 def set_scribt_storyboard_images(dict_data, db_session, for_consumer=True, socket=None):
     try:
@@ -543,20 +753,20 @@ def set_scribt_storyboard_images(dict_data, db_session, for_consumer=True, socke
                 project.status = Status.query.filter(
                     Status.code_name == 'GedSt').first()
                 db_session.commit()
-                
+
                 socket.emit('project_status_updated', {
-                    'project_id': project_id,                    
+                    'project_id': project_id,
                     'message': 'Project status updated'
                 })
                 return
             else:
-                
+
                 error = dict_data['e_message']
                 raise Exception(error)
         return "error"
     except Exception as e:
         project.status = Status.query.filter(
-                    Status.code_name == 'GedSc').first()
+            Status.code_name == 'GedSc').first()
         db_session.commit()
         if for_consumer:
             # insert in error table
@@ -565,13 +775,14 @@ def set_scribt_storyboard_images(dict_data, db_session, for_consumer=True, socke
             return
         else:
             raise e
-        
+
+
 def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=None):
     try:
         storyboard_id = dict_data['reference']
-        storyboard=Storyboard.query.get(storyboard_id)
+        storyboard = Storyboard.query.get(storyboard_id)
         project = storyboard.project
-        project_id=project.id
+        project_id = project.id
         success = dict_data['success']
         images_data = dict_data.get('images_data', None)
         if project:
@@ -581,20 +792,20 @@ def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=Non
                 project.status = Status.query.filter(
                     Status.code_name == 'GedSt').first()
                 db_session.commit()
-                
+
                 socket.emit('project_status_updated', {
-                    'project_id': project_id,                    
+                    'project_id': project_id,
                     'message': 'Project status updated'
                 })
                 return
             else:
-                
+
                 error = dict_data['e_message']
                 raise Exception(error)
         return "error"
     except Exception as e:
         project.status = Status.query.filter(
-                    Status.code_name == 'GedSc').first()
+            Status.code_name == 'GedSc').first()
         db_session.commit()
         if for_consumer:
             # insert in error table
@@ -602,7 +813,7 @@ def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=Non
                                  str(images_data), db_session)
             return
         else:
-            raise e        
+            raise e
 
 
 def t2t_consumer_bl(db_session, socket):
