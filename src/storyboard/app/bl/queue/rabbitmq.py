@@ -29,10 +29,19 @@ class RabbitMQ():
         channel = self.queues[self.queue_name].channel()
         channel.queue_declare(queue=self.queue_name, durable=True)
 
-    def re_init_connection(self):
-        self.init_connection()
+    def re_init_connection(self, retries=0):
+        retries += 1
+        try:
+            self.init_connection()
+        except Exception as e:
+            if retries < 3:
+                self.re_init_connection(retries)
+            else:
+                print("error re_init_connection: "+str(e))
+                raise e
 
-    def send_message(self, routing_key, message):
+    def send_message(self, routing_key, message, retries=0):
+        retries += 1
         try:
             channel = self.queues[self.queue_name].channel()
             channel.queue_declare(queue=routing_key, durable=True)
@@ -50,8 +59,13 @@ class RabbitMQ():
             self.re_init_connection()
             self.send_message(routing_key, message)
         except Exception as e:
-            print(str(e))
-            raise e
+            if retries < 3:
+                print("connection error2")
+                self.re_init_connection()
+                self.send_message(routing_key, message, retries)
+            else:
+                print("error3: "+str(e))
+                raise e
 
     def create_callback(self, process_func, db_session, socket=None):
         def callback(ch, method, properties, body):
