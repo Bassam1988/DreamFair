@@ -1,4 +1,4 @@
-from ..bl.storyboard_bl import delete_project_by_id, get_all_aspect_ratios, get_all_boards_per_mins, get_all_project_history, get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, get_project_by_id, create_project_bl, get_project_h_by_id, get_project_storyboard_bl, send_script, send_synopsis, update_project_bl, update_regenerate_storyboard
+from ..bl.storyboard_bl import delete_project_by_id, delete_project_h_by_id, get_all_aspect_ratios, get_all_boards_per_mins, get_all_project_history, get_all_projects, get_all_script_styles, get_all_storyboard_styles, get_all_video_durations, get_project_by_id, create_project_bl, get_project_h_by_id, get_project_storyboard_bl, send_script, send_synopsis, update_project_bl, update_regenerate_storyboard
 from ..helper.custom_response import CustomResponse
 
 
@@ -53,6 +53,15 @@ def get_project_h(project_h_id):
 @gateway_sb_blueprint.route('/delete_project/<uuid:project_id>', methods=['DELETE'])
 def delete_project(project_id):
     result = delete_project_by_id(request, project_id)
+    if result['status'] == 200:
+        return CustomResponse(succeeded=True, data=result['data'], status=200)
+    else:
+        return CustomResponse(succeeded=False, message=result['message'], status=result['status'])
+
+
+@gateway_sb_blueprint.route('/delete_project_history/<uuid:project_id>', methods=['DELETE'])
+def delete_project_h(project_id):
+    result = delete_project_h_by_id(request, project_id)
     if result['status'] == 200:
         return CustomResponse(succeeded=True, data=result['data'], status=200)
     else:

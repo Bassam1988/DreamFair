@@ -323,6 +323,34 @@ def delete_project_by_id(user_id, project_id):
     return {'message': 'No data found', 'status': 404}
 
 
+def delete_project_history_by_id(user_id, project_h_id):
+    project_h = ProjectHistory.query.get(project_h_id)
+    if project_h and str(project_h.project.user_id) == user_id:
+        subq = db_session.query(StoryboardHistory).filter(
+            StoryboardHistory.projects_history_id == project_h_id).all()
+        if subq:
+            images_folder = ""
+            for storyboard in subq:
+                if storyboard.image:
+                    images_folder = storyboard.image
+                    break
+
+            db_session.query(StoryboardHistory).filter(
+                StoryboardHistory.projects_history_id == project_h_id).delete()
+
+            project_folder = os.path.dirname(images_folder)
+            try:
+                shutil.rmtree(project_folder)
+            except FileNotFoundError:
+                pass  # Just continue execution if the folder does not exist
+
+        db_session.delete(project_h)
+        db_session.commit()
+        data = {'message': "Project with name: "+project_h.name+" deleted"}
+        return {'data': data, 'status': 200}
+    return {'message': 'No data found', 'status': 404}
+
+
 def get_all_script_styles():
     script_style_schema = ScriptStyleSchema()
     script_styles = ScriptStyle.query.all()
