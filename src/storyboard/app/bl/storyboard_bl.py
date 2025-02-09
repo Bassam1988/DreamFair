@@ -200,12 +200,18 @@ def create_project_history(project):
     data.pop('created_date')
     data.pop('storyboards')
     project_id = data.pop('id', None)
+
+    script_style = data.pop('script_style', None)
+    storyboard_style = data.pop('storyboard_style', None)
+    video_duration = data.pop('video_duration', None)
+    aspect_ratio = data.pop('aspect_ratio', None)
+
     data.update({'project_id': project_id,
-                 'script_style_id': data.pop('script_style')['id'] if data['script_style'] != None else None,
+                 'script_style_id': script_style['id'] if script_style else None,
                  'status_id': data.pop('status')['id'],
-                 'storyboard_style_id': data.pop('storyboard_style')['id'] if data['storyboard_style'] != None else None,
-                 'video_duration_id': data.pop('video_duration')['id'] if data['video_duration'] != None else None,
-                 'aspect_ratio_id': data.pop('aspect_ratio')['id'] if data['aspect_ratio'] != None else None,
+                 'storyboard_style_id': storyboard_style['id'] if storyboard_style else None,
+                 'video_duration_id': video_duration['id'] if video_duration else None,
+                 'aspect_ratio_id': aspect_ratio['id'] if aspect_ratio else None,
                  })
     project_h_schema = ProjectHistorySchema()
     errors = project_h_schema.validate(data)
@@ -246,7 +252,8 @@ def update_project_by_id(user_id, project_id, update_data):
                     delete_storyboard = True
                 if key in history_fields_storyboard_images:
                     delete_image = True
-        if create_history and not (project_copy.script == None or project_copy.script == "") and not (project_copy.synopsis == None or project_copy.synopsis == ""):
+        if create_history and not (project_copy.script == None or project_copy.script == "") and \
+                not (project_copy.synopsis == None or project_copy.synopsis == ""):
             project_h_id = create_project_history(project_copy)
 
             project_storyboards = db_session.query(Storyboard).filter(
@@ -294,9 +301,20 @@ def delete_project_by_id(user_id, project_id):
 
         db_session.query(Storyboard).filter(
             Storyboard.project_id == project_id).delete()
+        subq = db_session.query(ProjectHistory.id).filter(
+            ProjectHistory.project_id == project_id)
+
+        db_session.query(StoryboardHistory) \
+            .filter(StoryboardHistory.projects_history_id.in_(subq)) \
+            .delete(synchronize_session=False)
+        db_session.query(ProjectHistory).filter(
+            ProjectHistory.project_id == project_id).delete()
         media_folder = os.getenv('MEDIA_FOLDER')
         project_folder = os.path.join(media_folder, str(project.id))
-        shutil.rmtree(project_folder)
+        try:
+            shutil.rmtree(project_folder)
+        except FileNotFoundError:
+            pass  # Just continue execution if the folder does not exist
 
         db_session.delete(project)
         db_session.commit()
