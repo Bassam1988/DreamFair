@@ -49,7 +49,7 @@ class ProjectHistoryListSchema(Schema):
 class ProjectHistorySchema(Schema):
     id = fields.UUID(dump_only=True)
     name = fields.Str(required=True)
-    synopsis = fields.Str(required=False)
+    synopsis = fields.Str(required=False, allow_none=True)
     script = fields.Str(required=False)
     created_date = fields.Date(dump_only=True)
 

@@ -246,8 +246,7 @@ def update_project_by_id(user_id, project_id, update_data):
                     delete_storyboard = True
                 if key in history_fields_storyboard_images:
                     delete_image = True
-
-        if create_history and (project_copy.script != None or project_copy.script != "") and (project_copy.synopsis != None or project_copy.synopsis != ""):
+        if create_history and not (project_copy.script == None or project_copy.script == "") and not (project_copy.synopsis == None or project_copy.synopsis == ""):
             project_h_id = create_project_history(project_copy)
 
             project_storyboards = db_session.query(Storyboard).filter(
