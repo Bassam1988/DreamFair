@@ -83,7 +83,7 @@ def download_image(url):
 
 
 def create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retries=0):
-    retry_count=retries+1
+    retry_count = retries+1
     try:
         text2image_operation_schema = Text2ImageOperationSchema()
         text2image_operation_data = {
@@ -91,7 +91,8 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
             'script_text': orginal_script
         }
 
-        errors = text2image_operation_schema.validate(text2image_operation_data)
+        errors = text2image_operation_schema.validate(
+            text2image_operation_data)
         if errors:
             raise Exception(errors)
         text2image_operation = Text2ImageOperation(**text2image_operation_data)
@@ -106,7 +107,6 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
             'media_folder': media_folder
         }
 
-    
         text2image_operation_id = text2image_operation.id
         save_data['text2image_operation_id'] = text2image_operation_id
         for image_data in images_data:
@@ -144,13 +144,13 @@ def create_storyboard_operation_images(images_data, reference, orginal_script, d
             # delete images from MongoDB
             for fid in images_id:
                 os.remove(fid)
-        if retry_count<4:
-           return create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retry_count)
+        if retry_count < 4:
+            return create_storyboard_operation_images(images_data, reference, orginal_script, db_session, retry_count)
         else:
             raise e
 
 
-def generate_storyboards(data, db_session, for_consumer=False,retries=0):
+def generate_storyboards(data, db_session, for_consumer=False, retries=0):
     """Generates storyboards using DALL·E based on the script and user preferences.
 
     Args:
@@ -163,9 +163,9 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
         list: URLs of the generated storyboard images or error message placeholders.
     """
     # storyboards stylse, size, and other data
-    retry_count=retries+1
+    retry_count = retries+1
     if for_consumer:
-            data = json.loads(data)
+        data = json.loads(data)
     orginal_script = data['orginal_script']
     prompts = data['prompts']
     reference = data['reference']
@@ -173,7 +173,7 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
     storyboard_style = data['storyboard_style']
     source = data['source']
     try:
-        
+
         prompt = ""
         images_data = []
         # prompt = f"I will give you the totla script, and the prompt of each image inside that script,"\
@@ -187,7 +187,7 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
         for key, value in prompts.items():
             prompt = f"As a professional storyboard artist\director Create one board of a storyboard with aspect ratio: {aspect_ratio} for scene in {storyboard_style} of description:{value}.\n"\
                 "the image should contain only one board for one scen, bon't put in one image more than one board\n"\
-                    "and make this one image for one scen, don't make it as multible boards or as storyboard, make it as image\n"\
+                "and make this one image for one scen, don't make it as multible boards or as storyboard, make it as image\n"\
                 " and take the total script of all scenes in considration to keep same context\n"\
                 f"the total script: {orginal_script} \n"
 
@@ -199,17 +199,18 @@ def generate_storyboards(data, db_session, for_consumer=False,retries=0):
             images_data, reference, orginal_script, db_session)
         if for_consumer:
             # send message to text_to_message_notification
-            set_message_storyboards_images(reference, returned_data, source=source)
+            set_message_storyboards_images(
+                reference, returned_data, source=source)
             return
         return {'data': images_data, }
     except Exception as e:
         if for_consumer:
-            if retry_count<4:
-                data=json.dumps(data)
-                return generate_storyboards(data, db_session, for_consumer,retry_count)
+            if retry_count < 4:
+                data = json.dumps(data)
+                return generate_storyboards(data, db_session, for_consumer, retry_count)
             else:
                 # insert in error table
-                error_processing(reference, str(e.args), prompt, db_session)
+                error_processing(reference, e, prompt, db_session)
                 return
         else:
             raise e
@@ -233,9 +234,9 @@ def insert_error(reference, error, message, db_session):
 
 def error_processing(reference, error, message, db_session):
     try:
-        insert_error(reference, error, message, db_session)
+        insert_error(reference, str(error), message, db_session)
         set_message_storyboards_images(
-            reference, success=0, e_message=error)
+            reference, success=0, e_message="error"+error)
     except Exception as e:
         pass
 
@@ -246,8 +247,8 @@ def set_message_storyboards_images(reference, dict_data=None, success=1, e_messa
         'e_message': e_message,
         'reference': reference,
         'images_data': dict_data,
-        'source':source
-        }
+        'source': source
+    }
     text_to_image_n_queue.send_message(
         routing_key=rabbitmq_n_queue_name, message=message)
 
