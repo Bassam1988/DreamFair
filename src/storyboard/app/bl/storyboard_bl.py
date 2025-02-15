@@ -194,9 +194,8 @@ def create_storyboard_history(project_h_id, project_storyboards):
             pass
 
 
-def create_project_history(project):
-    project_schema = ProjectSchema()
-    data = project_schema.dump(project)
+def create_project_history(data):
+
     data.pop('created_date')
     data.pop('storyboards')
     project_id = data.pop('id', None)
@@ -235,7 +234,9 @@ def update_project_by_id(user_id, project_id, update_data):
     history_fields_storyboard_images = [
         'storyboard_style_id', 'aspect_ratio_id']
     project = Project.query.get(project_id)
-    project_copy = copy.copy(project)
+    project_schema_copy = ProjectSchema()
+    old_p_s = project_schema_copy.dump(project)
+    project_copy_data = copy.deepcopy(old_p_s)
     create_history = False
     delete_storyboard = False
     delete_script = False
@@ -252,9 +253,9 @@ def update_project_by_id(user_id, project_id, update_data):
                     delete_storyboard = True
                 if key in history_fields_storyboard_images:
                     delete_image = True
-        if create_history and not (project_copy.script == None or project_copy.script == "") and \
-                not (project_copy.synopsis == None or project_copy.synopsis == ""):
-            project_h_id = create_project_history(project_copy)
+        if create_history and not (project_copy_data['script'] == None or project_copy_data['script'] == "") and \
+                not (project_copy_data['synopsis'] == None or project_copy_data['synopsis'] == ""):
+            project_h_id = create_project_history(project_copy_data)
 
             project_storyboards = db_session.query(Storyboard).filter(
                 Storyboard.project_id == project_id).all()

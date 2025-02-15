@@ -108,15 +108,6 @@ class Project(Base):
     project_history = relationship("ProjectHistory", back_populates="project")
     created_date = Column(DateTime, default=func.now())
 
-    def __copy__(self):
-        cls = self.__class__
-        copied = cls.__new__(cls)
-        for key, value in self.__dict__.items():
-            if key != '_sa_instance_state':
-                setattr(copied, key, value)
-        make_transient(copied)  # Detach from any session
-        return copied
-
 
 class Storyboard(Base):
     __tablename__ = 'storyboards'
