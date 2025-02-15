@@ -26,7 +26,8 @@ class StoryboardHistoryProjectHistorySchema(Schema):
 class ProjectHistoryListSchema(Schema):
     id = fields.UUID(dump_only=True)
     created_date = fields.Date(dump_only=True)
-
+    synopsis = fields.Str(required=False)
+    script = fields.Str(required=False)
     script_style_id = fields.UUID(load_only=True)
     script_style = fields.Nested(ScriptStyleSchema, dump_only=True)
 
