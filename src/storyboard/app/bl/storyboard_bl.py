@@ -556,15 +556,24 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
     try_count = tries+1
     try:
         project_schema = ProjectSchema()
-        storyboard_query = Storyboard.query.filter(storyboard_id)
-        storyboard = storyboard_query[0]
+        storyboard_query = Storyboard.query.get(storyboard_id)
+        storyboard = storyboard_query
         project = storyboard.project
+        old_p_data = project_schema.dump(project)
         if project and str(project.user_id) == user_id:
+
+            # insert project and storyboards in history
+            project_h_id = create_project_history(old_p_data)
+            project_storyboards = db_session.query(Storyboard).filter(
+                Storyboard.project_id == project.id).all()
+            create_storyboard_history(project_h_id, project_storyboards)
+            db_session.flush()
 
             reference = str(storyboard.id)
 
             orginal_script = project.script
             storyboard.scene_description = scene_description
+            storyboard.image = None
             prompts = {storyboard.order: scene_description}
 
             aspect_ratio = project.aspect_ratio
