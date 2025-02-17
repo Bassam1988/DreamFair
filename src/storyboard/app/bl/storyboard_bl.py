@@ -63,7 +63,8 @@ def get_all_project_histories(user_id, project_id):
 
     project_histories = db_session.query(ProjectHistory).join(Project).\
         filter(ProjectHistory.project_id == project_id, Project.user_id == user_id).\
-        options(joinedload(ProjectHistory.project)).all()
+        options(joinedload(ProjectHistory.project)).order_by(
+        ProjectHistory.created_date.desc()).all()
 
     data = project_history_schema.dump(project_histories, many=True)
     return {'data': data, 'status': 200}
