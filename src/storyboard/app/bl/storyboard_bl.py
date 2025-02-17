@@ -514,7 +514,8 @@ def send_script(user_id, project_id, tries=0):
 
             aspect_ratio = project.aspect_ratio
             if aspect_ratio:
-                aspect_ratio_name = aspect_ratio.name
+                aspect_ratio_name = aspect_ratio.name if aspect_ratio.description + \
+                    f" ({aspect_ratio.description})" else ""
             else:
                 return {'message': 'Aspect ratio is mandatory', 'status': 400}
 
