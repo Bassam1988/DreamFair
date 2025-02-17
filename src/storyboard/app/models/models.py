@@ -44,6 +44,7 @@ class AspectRatio(Base):
     __tablename__ = 'aspect_ratios'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(50), unique=True)
+    description = Column(String(350), unique=True)
     code_name = Column(String(20), unique=True)
     projects = relationship("Project", back_populates="aspect_ratio")
     project_history = relationship(
