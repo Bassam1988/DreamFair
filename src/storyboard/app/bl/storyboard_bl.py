@@ -688,7 +688,7 @@ def set_scribt_and_storyboard_desc(dict_data, db_session, for_consumer=True):
                 if storyboards_list:
                     db_session.bulk_save_objects(storyboards_list)
                 project.status = Status.query.filter(
-                    Status.code_name == 'GedSc').first()
+                    Status.code_name == 'GedSt').first()
                 db_session.commit()
                 return
             else:
@@ -741,7 +741,7 @@ def set_storyboard_desc(dict_data, db_session, for_consumer=True):
                 if storyboards_list:
                     db_session.bulk_save_objects(storyboards_list)
                 project.status = Status.query.filter(
-                    Status.code_name == 'GedSc').first()
+                    Status.code_name == 'GedSt').first()
                 db_session.commit()
                 return
             else:
