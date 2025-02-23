@@ -282,7 +282,7 @@ def update_project_by_id(user_id, project_id, update_data, ):
         project_schema = ProjectSchema()
         data = project_schema.dump(project)
         sio.emit('project_status_updated', {
-            'project_id': project.id,
+            'project_id': str(project.id),
             'message': 'Project status updated'
         })
         return {'data': data, 'status': 200}
