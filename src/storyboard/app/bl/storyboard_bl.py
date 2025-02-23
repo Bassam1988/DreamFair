@@ -229,8 +229,6 @@ def create_project_history(data):
 
 
 def update_project_by_id(user_id, project_id, update_data, ):
-    sio = socketio.Client()
-    sio.connect(os.getenv('SOCKETIO_SERVER_URL', 'http://localhost:5002'))
     history_all = ['script', 'synopsis', 'script_style_id',
                    'video_duration_id', 'storyboard_style_id', 'aspect_ratio_id']
     history_fields_script_and_storyboard = [
@@ -281,11 +279,7 @@ def update_project_by_id(user_id, project_id, update_data, ):
         db_session.commit()
         project_schema = ProjectSchema()
         data = project_schema.dump(project)
-        sio.emit('project_status_updated', {
-            'project_id': str(project.id),
-            'message': 'Project status updated',
-            'action': 'update_project_by_id'
-        })
+
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
 
@@ -661,7 +655,8 @@ def set_scribt_storyboard_desc(data, db_session, for_consumer=True, socket=None)
     ref = dict_data['reference']
     socket.emit('project_status_updated', {
         'project_id': ref,
-        'message': 'Project status updated'
+        'message': 'Project status updated',
+        'action': 'set_scribt_storyboard_desc'
     })
 
 
@@ -822,7 +817,8 @@ def set_scribt_storyboard_images(dict_data, db_session, for_consumer=True, socke
 
                 socket.emit('project_status_updated', {
                     'project_id': str(project_id),
-                    'message': 'Project status updated'
+                    'message': 'Project status updated',
+                    'action': 'set_scribt_storyboard_images'
                 })
                 return
             else:
@@ -861,7 +857,8 @@ def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=Non
 
                 socket.emit('project_status_updated', {
                     'project_id': str(project_id),
-                    'message': 'Project status updated'
+                    'message': 'Project status updated',
+                    'action': 'update_storyboard_image'
                 })
                 return
             else:
