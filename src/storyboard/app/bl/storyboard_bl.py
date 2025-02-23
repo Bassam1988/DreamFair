@@ -283,7 +283,8 @@ def update_project_by_id(user_id, project_id, update_data, ):
         data = project_schema.dump(project)
         sio.emit('project_status_updated', {
             'project_id': str(project.id),
-            'message': 'Project status updated'
+            'message': 'Project status updated',
+            'action': 'update_project_by_id'
         })
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
@@ -820,7 +821,7 @@ def set_scribt_storyboard_images(dict_data, db_session, for_consumer=True, socke
                 db_session.commit()
 
                 socket.emit('project_status_updated', {
-                    'project_id': project_id,
+                    'project_id': str(project_id),
                     'message': 'Project status updated'
                 })
                 return
@@ -859,7 +860,7 @@ def update_storyboard_image(dict_data, db_session, for_consumer=True, socket=Non
                 db_session.commit()
 
                 socket.emit('project_status_updated', {
-                    'project_id': project_id,
+                    'project_id': str(project_id),
                     'message': 'Project status updated'
                 })
                 return
