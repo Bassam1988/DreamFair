@@ -2,6 +2,8 @@ import shutil
 import copy
 import json
 
+import socketio
+
 from ..schemas.history_schemas import ProjectHistoryListSchema, ProjectHistorySchema, StoryboardHistoryCreateSchema
 from ..database import db_session
 from ..schemas.schemas import AspectRatioSchema, BoardsPerMinSchema, ProjectSchema, ScriptStyleSchema, StoryBoardStyleSchema, StoryboardSchema, T2IOperationErrorSchema, T2TOperationErrorSchema, VideoDurationSchema
@@ -226,7 +228,9 @@ def create_project_history(data):
     return project_h.id
 
 
-def update_project_by_id(user_id, project_id, update_data):
+def update_project_by_id(user_id, project_id, update_data, ):
+    sio = socketio.Client()
+    sio.connect(os.getenv('SOCKETIO_SERVER_URL', 'http://localhost:5002'))
     history_all = ['script', 'synopsis', 'script_style_id',
                    'video_duration_id', 'storyboard_style_id', 'aspect_ratio_id']
     history_fields_script_and_storyboard = [
@@ -277,6 +281,10 @@ def update_project_by_id(user_id, project_id, update_data):
         db_session.commit()
         project_schema = ProjectSchema()
         data = project_schema.dump(project)
+        sio.emit('project_status_updated', {
+            'project_id': project.id,
+            'message': 'Project status updated'
+        })
         return {'data': data, 'status': 200}
     return {'message': 'No data found', 'status': 404}
 
