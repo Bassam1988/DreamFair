@@ -585,18 +585,19 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             #     "image": None
             # })
             # db_session.commit()
-            # setattr(storyboard, 'scene_description', str(scene_description))
-            # db_session.add(storyboard)
-            # db_session.flush()
-            # storyboard.image = None
-            # db_session.add(storyboard)
-            # db_session.flush()
 
-            db_session.execute(text("UPDATE storyboard SET scene_description=:scene_description, image=NULL WHERE id=:storyboard_id"),
-                               {"scene_description": scene_description,
-                                   "storyboard_id": storyboard_id}
-                               )
-            db_session.commit()
+            storyboard.image = None
+            db_session.add(storyboard)
+            db_session.flush()
+            setattr(storyboard, 'scene_description', str(scene_description))
+            db_session.add(storyboard)
+            db_session.flush()
+
+            # db_session.execute(text("UPDATE storyboard SET scene_description=:scene_description, image=NULL WHERE id=:storyboard_id"),
+            #                    {"scene_description": scene_description,
+            #                        "storyboard_id": storyboard_id}
+            #                    )
+            # db_session.commit()
 
             prompts = {storyboard.order: scene_description}
 
