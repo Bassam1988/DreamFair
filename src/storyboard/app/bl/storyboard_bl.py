@@ -579,12 +579,13 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             orginal_script = project.script
             storyboard.scene_description = scene_description
             storyboard.image = None
+            db_session.flush()
             prompts = {storyboard.order: scene_description}
 
             aspect_ratio = project.aspect_ratio
             if aspect_ratio:
                 aspect_ratio_name = aspect_ratio.name if aspect_ratio.description + \
-                    f" ({aspect_ratio.description})" else ""
+                    f", ({aspect_ratio.description})" else ""
             else:
                 return {'message': 'Aspect ratio is mandatory', 'status': 400}
 

@@ -49,9 +49,10 @@ fs_images = mongo_client.fs_db
 
 def generate_image(prompt, aspect_ratio):
     size = "1024x1024"
-    if aspect_ratio == '16:9':
+    aspect_ratio2 = aspect_ratio.split(',')[0]
+    if aspect_ratio2 == '16:9':
         size = "1792x1024"
-    elif aspect_ratio == '9:16':
+    elif aspect_ratio2 == '9:16':
         size = "1024x1792"
 
     openai_key = os.getenv('OPENAI_SECRET_KEY')
@@ -185,7 +186,7 @@ def generate_storyboards(data, db_session, for_consumer=False, retries=0):
         #     "return me list of urls in the same images' order"
 
         for key, value in prompts.items():
-            prompt = f"As a professional storyboard artist\director Create one board of a storyboard with aspect ratio: {aspect_ratio} for scene in {storyboard_style} of description:{value}.\n"\
+            prompt = f"As a professional storyboard artist\director Create one board of a storyboard with aspect ratio: {aspect_ratio} for scene in style of {storyboard_style} of description:{value}.\n"\
                 "the image should contain only one board for one scen, bon't put in one image more than one board\n"\
                 "and make this one image for one scen, don't make it as multible boards or as storyboard, make it as image\n"\
                 " and take the total script of all scenes in considration to keep same context\n"\
