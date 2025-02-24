@@ -128,7 +128,7 @@ def revert_moved_images(moved_paths):
 
 def move_image_to_history_folder(old_image_path, p_h_id):
     """
-    Move an image file from its current folder into a `history` subfolder 
+    Move an image file from its current folder into a `history` subfolder
     located in the same parent directory. For example:
 
         If old_image_path = "/images/projects/0021/img1.jpg",
@@ -569,13 +569,12 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
         if project and str(project.user_id) == user_id:
 
             # insert project and storyboards in history
-            # project_h_id = create_project_history(old_p_data)
-            # project_storyboards = db_session.query(Storyboard).filter(
-            #     Storyboard.project_id == project.id).all()
-            # create_storyboard_history(project_h_id, project_storyboards)
+            project_h_id = create_project_history(old_p_data)
+            project_storyboards = db_session.query(Storyboard).filter(
+                Storyboard.project_id == project.id).all()
+            create_storyboard_history(project_h_id, project_storyboards)
 
-            # db_session.flush()
-            # del (project_storyboards)
+            del (project_storyboards)
             reference = str(storyboard.id)
 
             orginal_script = project.script
@@ -593,8 +592,11 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
 
             aspect_ratio = project.aspect_ratio
             if aspect_ratio:
-                aspect_ratio_name = aspect_ratio.name if aspect_ratio.description + \
-                    f", ({aspect_ratio.description})" else ""
+                if aspect_ratio.description:
+                    aspect_ratio_name = aspect_ratio.name + \
+                        f", ({aspect_ratio.description})"
+                else:
+                    aspect_ratio_name = aspect_ratio.name
             else:
                 return {'message': 'Aspect ratio is mandatory', 'status': 400}
 
