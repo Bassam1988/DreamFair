@@ -1,8 +1,7 @@
 import shutil
 import copy
 import json
-
-import socketio
+from sqlalchemy.orm import make_transient
 
 from ..schemas.history_schemas import ProjectHistoryListSchema, ProjectHistorySchema, StoryboardHistoryCreateSchema
 from ..database import db_session
@@ -577,10 +576,12 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             reference = str(storyboard.id)
 
             orginal_script = project.script
-
+            storyboard = db_session.query(Storyboard).filter(
+                Storyboard.id == storyboard_id).one()
             storyboard.scene_description = scene_description
             storyboard.image = None
-            db_session.add(storyboard)
+
+            make_transient(storyboard)
             db_session.commit()
             prompts = {storyboard.order: scene_description}
 
