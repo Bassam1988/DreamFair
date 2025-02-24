@@ -569,26 +569,26 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
         if project and str(project.user_id) == user_id:
 
             # insert project and storyboards in history
-            project_h_id = create_project_history(old_p_data)
-            project_storyboards = db_session.query(Storyboard).filter(
-                Storyboard.project_id == project.id).all()
-            create_storyboard_history(project_h_id, project_storyboards)
+            # project_h_id = create_project_history(old_p_data)
+            # project_storyboards = db_session.query(Storyboard).filter(
+            #     Storyboard.project_id == project.id).all()
+            # create_storyboard_history(project_h_id, project_storyboards)
 
-            db_session.flush()
-            del (project_storyboards)
+            # db_session.flush()
+            # del (project_storyboards)
             reference = str(storyboard.id)
 
             orginal_script = project.script
 
-            db_session.query(Storyboard).filter(Storyboard.id == storyboard_id).update({
-                "scene_description": scene_description,
-                "image": None
-            })
-            db_session.commit()
-            # storyboard.scene_description = scene_description
-            # storyboard.image = None
-            # db_session.add(storyboard)
-            # db_session.flush()
+            # db_session.query(Storyboard).filter(Storyboard.id == storyboard_id).update({
+            #     "scene_description": scene_description,
+            #     "image": None
+            # })
+            # db_session.commit()
+            storyboard.scene_description = scene_description
+            storyboard.image = None
+            db_session.add(storyboard)
+            db_session.flush()
             prompts = {storyboard.order: scene_description}
 
             aspect_ratio = project.aspect_ratio
