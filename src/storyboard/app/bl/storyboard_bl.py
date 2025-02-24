@@ -574,15 +574,14 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
                 Storyboard.project_id == project.id).all()
             create_storyboard_history(project_h_id, project_storyboards)
 
-            db_session.flush()
-            del (project_storyboards)
             reference = str(storyboard.id)
 
             orginal_script = project.script
+            storyboard = Storyboard.query.filter(
+                Storyboard.id == storyboard_id).first()
             storyboard.scene_description = scene_description
             storyboard.image = None
-            db_session.add(storyboard)
-            db_session.flush()
+
             prompts = {storyboard.order: scene_description}
 
             aspect_ratio = project.aspect_ratio
