@@ -573,8 +573,9 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             project_storyboards = db_session.query(Storyboard).filter(
                 Storyboard.project_id == project.id).all()
             create_storyboard_history(project_h_id, project_storyboards)
-            db_session.flush()
 
+            db_session.flush()
+            del (project_storyboards)
             reference = str(storyboard.id)
 
             orginal_script = project.script
