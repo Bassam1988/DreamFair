@@ -562,8 +562,6 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
         project_schema = ProjectSchema()
         storyboard = Storyboard.query.filter(
             Storyboard.id == storyboard_id).first()
-       # storyboard = db_session.query(Storyboard).filter(
-        #     Storyboard.id == storyboard_id).with_for_update(nowait=True).first()
 
         project = storyboard.project
         old_p_data = project_schema.dump(project)
@@ -580,25 +578,8 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
 
             orginal_script = project.script
 
-            # db_session.query(Storyboard).filter(Storyboard.id == storyboard_id).update({
-            #     "scene_description": scene_description,
-            #     "image": None
-            # })
-            # db_session.commit()
-
-            # storyboard.image = None
-            # db_session.add(storyboard)
-            # db_session.flush()
-
+            storyboard.image = None
             setattr(storyboard, 'scene_description', str(scene_description))
-            db_session.add(storyboard)
-            db_session.flush()
-
-            # db_session.execute(text("UPDATE storyboard SET scene_description=:scene_description, image=NULL WHERE id=:storyboard_id"),
-            #                    {"scene_description": scene_description,
-            #                        "storyboard_id": storyboard_id}
-            #                    )
-            # db_session.commit()
 
             prompts = {storyboard.order: scene_description}
 
