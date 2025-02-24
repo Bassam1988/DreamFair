@@ -579,7 +579,7 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             orginal_script = project.script
             storyboard.scene_description = scene_description
             storyboard.image = None
-            storyboard.save()
+            db_session.add(storyboard)
             prompts = {storyboard.order: scene_description}
 
             aspect_ratio = project.aspect_ratio
