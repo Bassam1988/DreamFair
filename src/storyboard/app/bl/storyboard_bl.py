@@ -561,8 +561,9 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
     try_count = tries+1
     try:
         project_schema = ProjectSchema()
-        storyboard_query = Storyboard.query.get(storyboard_id)
-        storyboard = storyboard_query
+        storyboard = Storyboard.query.filter(
+            Storyboard.id == storyboard_id).first()
+
         project = storyboard.project
         old_p_data = project_schema.dump(project)
         if project and str(project.user_id) == user_id:
