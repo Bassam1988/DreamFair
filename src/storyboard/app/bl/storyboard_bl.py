@@ -589,6 +589,7 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             storyboard.image = None
             db_session.add(storyboard)
             db_session.flush()
+
             setattr(storyboard, 'scene_description', str(scene_description))
             db_session.add(storyboard)
             db_session.flush()
