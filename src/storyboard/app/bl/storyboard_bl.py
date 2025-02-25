@@ -579,7 +579,7 @@ def update_regenerate_storyboard(user_id, storyboard_id, scene_description, trie
             orginal_script = project.script
 
             storyboard.image = None
-            setattr(storyboard, 'scene_description', str(scene_description))
+            storyboard.scene_description = scene_description
 
             prompts = {storyboard.order: scene_description}
 
